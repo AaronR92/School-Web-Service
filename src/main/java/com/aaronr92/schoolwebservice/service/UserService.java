@@ -1,5 +1,6 @@
 package com.aaronr92.schoolwebservice.service;
 
+import com.aaronr92.schoolwebservice.dto.PasswordChange;
 import com.aaronr92.schoolwebservice.dto.RoleChanged;
 import com.aaronr92.schoolwebservice.entity.User;
 import com.aaronr92.schoolwebservice.repository.UserRepository;
@@ -10,12 +11,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -24,7 +27,7 @@ import java.util.Optional;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -49,7 +52,7 @@ public class UserService implements UserDetailsService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     String.format("User with phone number [%s] already exists", user.getPhone()));
 
-        checkValidPassword(user);
+        checkValidPassword(user.getPassword());
 
         if (userRepository.count() == 0)
             user.grantAuthority(Role.ROLE_ADMINISTRATOR);
@@ -69,10 +72,30 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
-    public Map<String, String> deleteUser(User user) {
-        if (!userRepository.existsUserByEmailIgnoreCase(user.getEmail()) ||
-            !userRepository.existsUserByUsername(user.getUsername()))
+    public PasswordChange changePassword(User user, PasswordChange passwordChange) {
+        if (!passwordEncoder.matches(passwordChange.getCurrentPassword(), user.getPassword())) {
+            log.error("Current passwords does not match for user {}", user.getUsername());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Current password does not match yours!");
+        }
+        checkValidPassword(passwordChange.getNewPassword());
+        if (passwordEncoder.matches(passwordChange.getNewPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "You already have this password!");
+        }
+
+        String password = passwordEncoder.encode(passwordChange.getNewPassword());
+        user.setPassword(password);
+        userRepository.save(user);
+        passwordChange.setStatus("Password has changed successfully!");
+        return passwordChange;
+    }
+
+    public Map<String, String> deleteUser(String username) {
+        if (!userRepository.existsUserByUsername(username))
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+
+        User user = userRepository.findUserByUsername(username).get();
 
         log.info("Deleting user with name {} and username {}",
                 user.getName(),
@@ -116,18 +139,13 @@ public class UserService implements UserDetailsService {
                 "User does not exist!");
     }
 
-    private void checkValidPassword(User user) {
-        if (user.getPassword().length() < 8)
+    private void checkValidPassword(String password) {
+        if (password.length() < 8)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "The password length must be at least 8 chars!");
-
-        Optional<User> regUser = userRepository.findUserByUsername(user.getUsername());
-        if (regUser.isPresent()) {
-            if (regUser.get().getPassword().equals(passwordEncoder.encode(user.getPassword()))) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "You already have this password!");
-            }
-        }
+        if (password.length() > 16)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "The password length must be shorter than 16 chars!");
     }
 
     public Role checkRole(String role) {
