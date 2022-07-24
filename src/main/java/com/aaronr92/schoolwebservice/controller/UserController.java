@@ -37,13 +37,19 @@ public class UserController {
         return ResponseEntity.ok().body(userService.changePassword(user, passwordChange));
     }
 
+    @PutMapping("/change/username")
+    ResponseEntity<Map<String, String>> changeUsername(@AuthenticationPrincipal User user,
+                                                       @RequestParam String username) {
+        return ResponseEntity.ok(userService.changeUsername(user, username));
+    }
+
     @GetMapping
     ResponseEntity<List<User>> getUsers() {
         return ResponseEntity.ok().body(userService.getAllUsers());
     }
 
     @DeleteMapping
-    ResponseEntity<Map<String, String>> deleteUser(@RequestParam String username) {
+    ResponseEntity<?> deleteUser(@RequestParam String username) {
         return new ResponseEntity<>(userService.deleteUser(username), HttpStatus.NO_CONTENT);
     }
 

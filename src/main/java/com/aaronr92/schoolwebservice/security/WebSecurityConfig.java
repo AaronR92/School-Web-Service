@@ -38,7 +38,7 @@ public class WebSecurityConfig {
                 .antMatchers(GET, "/api/user").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(DELETE, "/api/user").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(PUT, "/api/user/change/password").authenticated()
-                .anyRequest().authenticated();
+                .anyRequest().permitAll();      // for testing purposes
         http.sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         return http.build();

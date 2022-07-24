@@ -62,6 +62,7 @@ public class UserService implements UserDetailsService {
         user.setName(user.getName().trim());
         user.setLastname(user.getLastname().trim());
         user.setUsername(user.getUsername().trim());
+        user.setUsernameChanged(false);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setNonLocked(true);
 
@@ -89,6 +90,17 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
         passwordChange.setStatus("Password has changed successfully!");
         return passwordChange;
+    }
+
+    public Map<String, String> changeUsername(User user, String username) {
+        if (user.isUsernameChanged()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Username was already changed");
+        }
+
+        user.setUsername(username);
+        user.setUsernameChanged(true);
+        return Map.of("status", "Username was changed successfully");
     }
 
     public Map<String, String> deleteUser(String username) {

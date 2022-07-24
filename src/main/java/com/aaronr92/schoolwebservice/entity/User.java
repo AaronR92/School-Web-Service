@@ -4,6 +4,7 @@ import com.aaronr92.schoolwebservice.util.Gender;
 import com.aaronr92.schoolwebservice.util.Role;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.hibernate.annotations.SortNatural;
@@ -20,7 +21,6 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
 
-@ToString
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,8 +29,8 @@ import java.util.*;
 public class User implements UserDetails {
 
     @Id
-    @GeneratedValue(generator = "mySeq")
-    @SequenceGenerator(name = "mySeq", sequenceName = "MY_SEQ", allocationSize = 1)
+    @GeneratedValue(generator = "userSeq")
+    @SequenceGenerator(name = "userSeq", sequenceName = "USER_SEQ", allocationSize = 1)
     @ReadOnlyProperty
     private Long id;
 
@@ -67,6 +67,14 @@ public class User implements UserDetails {
     @Transient
     @ReadOnlyProperty
     private int age;    // will not create 'age' column
+
+    @JsonIgnore
+    private boolean isUsernameChanged;
+
+    @JsonManagedReference
+    @JoinColumn(name = "marks_id")
+    @OneToMany
+    private Set<Mark> marks;
 
     @ReadOnlyProperty
     @Enumerated(EnumType.STRING)
