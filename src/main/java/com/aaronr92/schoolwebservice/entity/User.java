@@ -72,7 +72,7 @@ public class User implements UserDetails {
     private boolean isUsernameChanged;
 
     @JsonManagedReference
-    @JoinColumn(name = "marks_id")
+    @JoinColumn(name = "user_id")
     @OneToMany
     private Set<Mark> marks;
 

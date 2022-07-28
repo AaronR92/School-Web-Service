@@ -23,12 +23,13 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/add")
-    ResponseEntity<User> register(@Valid @RequestBody User user) {
+    ResponseEntity<User> register(@Valid @RequestBody User user,
+                                  @RequestParam(required = false) String role) {
         URI uri = URI.create(ServletUriComponentsBuilder
                 .fromCurrentContextPath()
-                .path("/api/auth/signup")
+                .path("/api/user/add")
                 .toUriString());
-        return ResponseEntity.created(uri).body(userService.registerNewUser(user));
+        return ResponseEntity.created(uri).body(userService.registerNewUser(user, role));
     }
 
     @PutMapping("/change/password")

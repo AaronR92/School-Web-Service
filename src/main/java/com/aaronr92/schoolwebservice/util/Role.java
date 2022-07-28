@@ -4,5 +4,6 @@ public enum Role {
     ROLE_ADMINISTRATOR,
     ROLE_TEACHER,
     ROLE_CURATOR,
+    ROLE_CLASS_PRESIDENT,
     ROLE_STUDENT
 }

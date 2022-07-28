@@ -4,9 +4,11 @@ import com.aaronr92.schoolwebservice.entity.Subject;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface SubjectRepository extends CrudRepository<Subject, Long> {
-    boolean existsByNameIgnoreCase(String name);
+    boolean existsByNameIgnoreCaseAndTeacher(String name, String teacher);
 
-    Subject findSubjectByNameIgnoreCase(String name);
+    Optional<Subject> findSubjectByNameIgnoreCaseAndTeacher(String name, String teacher);
 }

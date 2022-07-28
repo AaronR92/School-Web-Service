@@ -8,10 +8,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static com.aaronr92.schoolwebservice.util.Role.*;
+import static com.aaronr92.schoolwebservice.util.Role.ROLE_ADMINISTRATOR;
+import static com.aaronr92.schoolwebservice.util.Role.ROLE_TEACHER;
 import static org.springframework.http.HttpMethod.*;
 
 @Configuration
@@ -38,6 +38,7 @@ public class WebSecurityConfig {
                 .antMatchers(GET, "/api/user").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(DELETE, "/api/user").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(PUT, "/api/user/change/password").authenticated()
+                .antMatchers("/api/student/marks/**").hasAuthority(ROLE_TEACHER.name())
                 .anyRequest().permitAll();      // for testing purposes
         http.sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@ToString
 public class Mark {
 
     @Id
@@ -31,6 +32,8 @@ public class Mark {
 
     @ManyToOne
     private Subject subject;
+
+    private String teacher;
 
     private int mark;
 }

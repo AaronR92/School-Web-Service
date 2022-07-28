@@ -1,12 +1,14 @@
 package com.aaronr92.schoolwebservice.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.validation.constraints.NotBlank;
 
 @Entity(name = "subjects")
 @Getter @Setter
@@ -21,7 +23,11 @@ public class Subject {
     @JsonIgnore
     private Long id;
 
+    @JsonProperty("subject_name")
+    @NotBlank
     private String name;
 
+    @JsonProperty("teacher_username")
+    @NotBlank
     private String teacher;
 }

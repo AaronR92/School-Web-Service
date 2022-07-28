@@ -12,19 +12,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 @Slf4j
 public class UserService implements UserDetailsService {
+
+    //TODO
+    // validator for roles (like "do not mix admin and teacher")
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -41,7 +42,7 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public User registerNewUser(User user) {
+    public User registerNewUser(User user, String grantRole) {
         if (userRepository.existsUserByEmailIgnoreCase(user.getEmail()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     String.format("User with email [%s] already exists", user.getEmail()));
@@ -54,15 +55,24 @@ public class UserService implements UserDetailsService {
 
         checkValidPassword(user.getPassword());
 
-        if (userRepository.count() == 0)
+        if (userRepository.count() == 0) {
             user.grantAuthority(Role.ROLE_ADMINISTRATOR);
-        else
-            user.grantAuthority(Role.ROLE_STUDENT);
+        }
+
+        Role role = findRole(grantRole);
+
+        if (role == null) {
+            if (user.getRoles() == null || user.getRoles().size() == 0)
+                user.grantAuthority(Role.ROLE_STUDENT);
+        } else {
+            user.grantAuthority(role);
+        }
+
+        user.setUsernameChanged(user.getRoles().contains(Role.ROLE_ADMINISTRATOR));
 
         user.setName(user.getName().trim());
         user.setLastname(user.getLastname().trim());
         user.setUsername(user.getUsername().trim());
-        user.setUsernameChanged(false);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setNonLocked(true);
 
@@ -160,12 +170,23 @@ public class UserService implements UserDetailsService {
                     "The password length must be shorter than 16 chars!");
     }
 
-    public Role checkRole(String role) {
+    private Role checkRole(String role) {
+        Role r = findRole(role);
+        if (r == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Role not found!");
+        return r;
+    }
+
+    private Role findRole(String role) {
+        if (role == null)
+            return null;
+
         for (Role r : Role.values()) {
-            if (String.format("ROLE_%s", role).equals(r.name()))
+            if (String.format("ROLE_%s", role.toUpperCase()).equals(r.name()))
                 return r;
         }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "Role not found!");
+
+        return null;
     }
 }
