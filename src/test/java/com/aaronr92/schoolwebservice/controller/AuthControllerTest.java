@@ -37,9 +37,9 @@ class AuthControllerTest {
                 .content("{" +
                         "\"name\": \"Anton\"," +
                         "\"lastname\": \"Ruzanov\"," +
-                        "\"email\": \"ruzanov.2004@gmail.com\"," +
+                        "\"email\": \"ruzanov.@gmail.com\"," +
                         "\"phone\": \"+79181451681\"," +
-                        "\"dob\": \"15.09.2004\"" +
+                        "\"dob\": \"15.09.2000\"" +
                         "}"))
                 .andExpect(status().isOk());
     }
@@ -54,9 +54,9 @@ class AuthControllerTest {
                         .content("{" +
                                 "\"name\": \"Anton\"," +
                                 "\"lastname\": \"Ruzanov\"," +
-                                "\"email\": \"ruzanov.2004@gmail.com\"," +
+                                "\"email\": \"ruzanov@gmail.com\"," +
                                 "\"phone\": \"+79181451681\"," +
-                                "\"dob\": \"15.09.2004\"" +
+                                "\"dob\": \"15.09.2000\"" +
                                 "}"))
                 .andExpect(status().isBadRequest());
     }
