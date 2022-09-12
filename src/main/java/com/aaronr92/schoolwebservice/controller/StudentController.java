@@ -20,12 +20,12 @@ public class StudentController {
     private final UserService userService;
     private final MarkService markService;
 
-    @GetMapping
+    @GetMapping("/all")
     ResponseEntity<List<User>> getAllStudents() {
         return ResponseEntity.ok().body(userService.getAllUsers());
     }
 
-    @PostMapping("/marks/add")
+    @PostMapping("/mark/add")
     ResponseEntity<Map<String, String>> addMark(@AuthenticationPrincipal User user,
                                                 @RequestBody MarkDTO markDTO) {
         markService.addMark(user, markDTO);
@@ -34,7 +34,7 @@ public class StudentController {
 
     //TODO
     // not finished!
-    @DeleteMapping("/marks")
+    @DeleteMapping("/mark/delete")
     ResponseEntity<?> deleteMark(@AuthenticationPrincipal User user,
                     @RequestBody MarkDTO markDTO) {
         markService.deleteMark(user, markDTO);

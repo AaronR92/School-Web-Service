@@ -25,7 +25,8 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Entity(name = "users")
+@ToString
+@Entity(name = "user")
 public class User implements UserDetails {
 
     @Id
@@ -71,6 +72,9 @@ public class User implements UserDetails {
     @JsonIgnore
     private boolean isUsernameChanged;
 
+    @JsonIgnore
+    private boolean isNonLocked;
+
     @JsonManagedReference
     @JoinColumn(name = "user_id")
     @OneToMany
@@ -81,9 +85,6 @@ public class User implements UserDetails {
     @ElementCollection(fetch = FetchType.EAGER)
     @SortNatural
     private Set<Role> roles;
-
-    @JsonIgnore
-    private boolean isNonLocked;
 
     public int getAge() {
         return Period.between(dateOfBirth, LocalDate.now()).getYears();

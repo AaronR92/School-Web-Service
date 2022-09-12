@@ -55,9 +55,9 @@ public class UserService implements UserDetailsService {
 
         checkValidPassword(user.getPassword());
 
-        if (userRepository.count() == 0) {
-            user.grantAuthority(Role.ROLE_ADMINISTRATOR);
-        }
+//        if (userRepository.count() == 0) {
+//            user.grantAuthority(Role.ROLE_ADMINISTRATOR);
+//        }
 
         Role role = findRole(grantRole);
 
@@ -129,7 +129,7 @@ public class UserService implements UserDetailsService {
     }
 
     public List<User> getAllUsers() {
-        return (List<User>) userRepository.findAll();
+        return userRepository.findAll();
     }
 
     public RoleChanged changeRole(RoleChanged roleOperation) {

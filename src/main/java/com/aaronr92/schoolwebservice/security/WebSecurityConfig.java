@@ -36,6 +36,7 @@ public class WebSecurityConfig {
                 .antMatchers("login/**").permitAll()
                 .antMatchers(POST, "/api/user/add").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(GET, "/api/user").hasAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers(GET, "/api/user/all").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(DELETE, "/api/user").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(PUT, "/api/user/change/password").authenticated()
                 .antMatchers("/api/student/marks/**").hasAuthority(ROLE_TEACHER.name())

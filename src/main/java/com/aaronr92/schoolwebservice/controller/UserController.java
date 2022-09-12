@@ -25,6 +25,7 @@ public class UserController {
     @PostMapping("/add")
     ResponseEntity<User> register(@Valid @RequestBody User user,
                                   @RequestParam(required = false) String role) {
+        System.out.println(user.toString());
         URI uri = URI.create(ServletUriComponentsBuilder
                 .fromCurrentContextPath()
                 .path("/api/user/add")
