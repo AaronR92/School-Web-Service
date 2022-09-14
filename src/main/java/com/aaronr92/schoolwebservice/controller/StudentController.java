@@ -20,11 +20,6 @@ public class StudentController {
     private final UserService userService;
     private final MarkService markService;
 
-    @GetMapping("/all")
-    ResponseEntity<List<User>> getAllStudents() {
-        return ResponseEntity.ok().body(userService.getAllUsers());
-    }
-
     @PostMapping("/mark/add")
     ResponseEntity<Map<String, String>> addMark(@AuthenticationPrincipal User user,
                                                 @RequestBody MarkDTO markDTO) {

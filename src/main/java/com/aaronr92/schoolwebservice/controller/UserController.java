@@ -39,13 +39,7 @@ public class UserController {
         return ResponseEntity.ok().body(userService.changePassword(user, passwordChange));
     }
 
-    @PutMapping("/change/username")
-    ResponseEntity<Map<String, String>> changeUsername(@AuthenticationPrincipal User user,
-                                                       @RequestParam String username) {
-        return ResponseEntity.ok(userService.changeUsername(user, username));
-    }
-
-    @GetMapping
+    @GetMapping("/all")
     ResponseEntity<List<User>> getUsers() {
         return ResponseEntity.ok().body(userService.getAllUsers());
     }

@@ -86,7 +86,6 @@ public class MarkService {
 
         User receiver = userRepository.findUserByUsername(markDTO.getStudent()).get();
         if (receiver.getRoles().contains(Role.ROLE_ADMINISTRATOR) ||
-                receiver.getRoles().contains(Role.ROLE_CURATOR) ||
                 receiver.getRoles().contains(Role.ROLE_TEACHER) ||
                 !receiver.getRoles().contains(Role.ROLE_STUDENT)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

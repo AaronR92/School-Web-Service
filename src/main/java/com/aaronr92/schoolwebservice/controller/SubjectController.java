@@ -27,7 +27,7 @@ public class SubjectController {
         return ResponseEntity.created(uri).body(subjectService.addNewSubject(subject));
     }
 
-    @DeleteMapping
+    @DeleteMapping("/delete")
     ResponseEntity<Void> deleteSubject(@RequestParam String subject,
                                     @RequestParam String teacher_username) {
         subjectService.deleteSubject(subject, teacher_username);
