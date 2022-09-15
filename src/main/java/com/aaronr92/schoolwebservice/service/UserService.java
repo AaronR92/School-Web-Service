@@ -1,7 +1,8 @@
 package com.aaronr92.schoolwebservice.service;
 
 import com.aaronr92.schoolwebservice.dto.PasswordChange;
-import com.aaronr92.schoolwebservice.dto.RoleChanged;
+import com.aaronr92.schoolwebservice.dto.RoleOperation;
+import com.aaronr92.schoolwebservice.dto.UserDTO;
 import com.aaronr92.schoolwebservice.entity.User;
 import com.aaronr92.schoolwebservice.repository.UserRepository;
 import com.aaronr92.schoolwebservice.util.Role;
@@ -24,15 +25,12 @@ import java.util.Optional;
 @Slf4j
 public class UserService implements UserDetailsService {
 
-    //TODO
-    // validator for roles (like "do not mix admin and teacher")
-
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<User> user = userRepository.findUserByUsername(username);
+        Optional<User> user = userRepository.findUserByUsername(username.trim());
         if (user.isPresent()){
             log.info("User found in the database");
             return user.get();
@@ -42,75 +40,39 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public User registerNewUser(User user, String grantRole) {
-        if (userRepository.existsUserByEmailIgnoreCase(user.getEmail()))
+    public User signup(UserDTO userDTO) {
+        String username = String.format("%d_%d", userDTO.getGroup(), userDTO.getNumberByOrder());
+        if (userRepository.existsUserByEmailIgnoreCase(userDTO.getEmail()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    String.format("User with email [%s] already exists", user.getEmail()));
-        if (userRepository.existsUserByUsername(user.getUsername()))
+                    String.format("User with email [%s] already exists!", userDTO.getEmail()));
+        if (userRepository.existsUserByUsername(username))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    String.format("Username [%s] already taken!", user.getUsername()));
-        if (userRepository.existsUserByPhone(user.getPhone()))
+                    String.format("User [%s] already exists!", username));
+        if (userRepository.existsUserByPhone(userDTO.getPhone()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    String.format("User with phone number [%s] already exists", user.getPhone()));
+                    String.format("User with phone number [%s] already exists!", userDTO.getPhone()));
 
-        checkValidPassword(user.getPassword());
+        checkValidPassword(userDTO.getPassword());
 
-//        if (userRepository.count() == 0) {
-//            user.grantAuthority(Role.ROLE_ADMINISTRATOR);
-//        }
+        User user = User.builder()
+                .name(userDTO.getName().trim())
+                .lastname(userDTO.getLastname().trim())
+                .email(userDTO.getEmail().toLowerCase())
+                .username(username)
+                .password(passwordEncoder.encode(userDTO.getPassword()))
+                .phone(userDTO.getPhone())
+                .dateOfBirth(userDTO.getDateOfBirth())
+                .gender(userDTO.getGender())
+                .isNonLocked(true)
+                .build();
 
-        Role role = findRole(grantRole);
-
-        if (role == null) {
-            if (user.getRoles() == null || user.getRoles().size() == 0)
-                user.grantAuthority(Role.ROLE_STUDENT);
-        } else {
-            user.grantAuthority(role);
-        }
-
-        user.setUsernameChanged(user.getRoles().contains(Role.ROLE_ADMINISTRATOR));
-
-        user.setName(user.getName().trim());
-        user.setLastname(user.getLastname().trim());
-        user.setUsername(user.getUsername().trim());
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setNonLocked(true);
+        user.grantAuthority(Role.ROLE_STUDENT);
 
         log.info("Saving new user {} with username {} to the database",
                 user.getName(),
                 user.getUsername());
 
         return userRepository.save(user);
-    }
-
-    public PasswordChange changePassword(User user, PasswordChange passwordChange) {
-        if (!passwordEncoder.matches(passwordChange.getCurrentPassword(), user.getPassword())) {
-            log.error("Current passwords does not match for user {}", user.getUsername());
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Current password does not match yours!");
-        }
-        checkValidPassword(passwordChange.getNewPassword());
-        if (passwordEncoder.matches(passwordChange.getNewPassword(), user.getPassword())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "You already have this password!");
-        }
-
-        String password = passwordEncoder.encode(passwordChange.getNewPassword());
-        user.setPassword(password);
-        userRepository.save(user);
-        passwordChange.setStatus("Password has changed successfully!");
-        return passwordChange;
-    }
-
-    public Map<String, String> changeUsername(User user, String username) {
-        if (user.isUsernameChanged()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Username was already changed");
-        }
-
-        user.setUsername(username);
-        user.setUsernameChanged(true);
-        return Map.of("status", "Username was changed successfully");
     }
 
     public Map<String, String> deleteUser(String username) {
@@ -132,34 +94,80 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll();
     }
 
-    public RoleChanged changeRole(RoleChanged roleOperation) {
-        Optional<User> user = userRepository.findUserByUsername(roleOperation.getUsername());
+    public void changeRole(RoleOperation roleOperation) {
+        Optional<User> userOptional = userRepository.findUserByUsername(roleOperation.getUsername());
         Role role = checkRole(roleOperation.getRole());
 
-        if (user.isPresent()) {
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
             switch (roleOperation.getAction()) {
                 case GRANT:
-                    if (user.get().getRoles().contains(role))
+                    if (user.getRoles().contains(role)) {
                         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                 "The user already has this role!");
-                    else
-                        user.get().grantAuthority(role);
+                    }
+                    if (user.getRoles().contains(Role.ROLE_STUDENT) && role.equals(Role.ROLE_TEACHER)) {
+                        user.grantAuthority(Role.ROLE_TEACHER);
+                        user.removeAuthority(Role.ROLE_STUDENT);
+                    }
+                    user.grantAuthority(role);
                     break;
 
                 case REMOVE:
-                    if (!user.get().getRoles().contains(role))
+                    if (!user.getRoles().contains(role))
                         throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                 "The user does not have this role!");
                     else
-                        user.get().removeAuthority(role);
+                        user.removeAuthority(role);
                     break;
             }
-            userRepository.save(user.get());
-            return roleOperation;
-        }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "User does not exist!");
+            userRepository.save(user);
+        } else
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "User does not exist!");
     }
+
+    public void changeUsername(String oldUsername, String newUsername) {
+        newUsername = newUsername.trim();
+        Optional<User> userOptional = userRepository.findUserByUsername(oldUsername.trim());
+        if (userOptional.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+        if (userRepository.existsUserByUsername(newUsername))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Username [%s] is already occupied", newUsername));
+        User user = userOptional.get();
+        user.setUsername(newUsername);
+        userRepository.save(user);
+    }
+
+    public PasswordChange changePassword(User user, PasswordChange passwordChange) {
+        if (!passwordEncoder.matches(passwordChange.getCurrentPassword(), user.getPassword())) {
+            log.error("Current passwords does not match for user {}", user.getUsername());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Current password does not match yours!");
+        }
+        checkValidPassword(passwordChange.getNewPassword());
+        if (passwordEncoder.matches(passwordChange.getNewPassword(), user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "You already have this password!");
+        }
+
+        String password = passwordEncoder.encode(passwordChange.getNewPassword());
+        user.setPassword(password);
+        userRepository.save(user);
+        passwordChange.setStatus("Password has changed successfully!");
+        return passwordChange;
+    }
+
+    //    public Map<String, String> changeUsername(User user, String username) {
+//        if (user.isUsernameChanged()) {
+//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+//                    "Username was already changed");
+//        }
+//
+//        user.setUsername(username);
+//        user.setUsernameChanged(true);
+//        return Map.of("status", "Username was changed successfully");
+//    }
 
     private void checkValidPassword(String password) {
         if (password.length() < 8)

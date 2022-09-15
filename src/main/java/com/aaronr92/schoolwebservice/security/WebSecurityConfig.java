@@ -10,8 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static com.aaronr92.schoolwebservice.util.Role.ROLE_ADMINISTRATOR;
-import static com.aaronr92.schoolwebservice.util.Role.ROLE_TEACHER;
+import static com.aaronr92.schoolwebservice.util.Role.*;
 import static org.springframework.http.HttpMethod.*;
 
 @Configuration
@@ -34,13 +33,17 @@ public class WebSecurityConfig {
         http.csrf().disable();
         http.authorizeRequests()
                 .antMatchers("login/**").permitAll()
-                .antMatchers(POST, "/api/user/add").hasAuthority(ROLE_ADMINISTRATOR.name())
-                .antMatchers(GET, "/api/user").hasAuthority(ROLE_ADMINISTRATOR.name())
-                .antMatchers(GET, "/api/user/all").hasAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers(POST, "/api/user/signup").anonymous()
+                .antMatchers(PUT, "/api/user/change/password").hasAnyAuthority(ROLE_TEACHER.name(), ROLE_STUDENT.name())
+                .antMatchers(PUT, "/api/user/change/role").hasAnyAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers(PUT, "/api/user/change/username").hasAnyAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers(GET, "/api/user/find/all").hasAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers(GET, "/api/user/find").authenticated()
                 .antMatchers(DELETE, "/api/user").hasAuthority(ROLE_ADMINISTRATOR.name())
-                .antMatchers(PUT, "/api/user/change/password").authenticated()
-                .antMatchers("/api/student/marks/**").hasAuthority(ROLE_TEACHER.name())
-                .anyRequest().permitAll();      // for testing purposes
+                .antMatchers(POST, "api/student/mark/add").hasAuthority(ROLE_TEACHER.name())
+                .antMatchers(DELETE, "api/student/mark/delete").hasAuthority(ROLE_TEACHER.name())
+                .antMatchers(POST, "/subject/new").hasAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers(DELETE, "/api/subject/delete").hasAuthority(ROLE_ADMINISTRATOR.name());
         http.sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         return http.build();

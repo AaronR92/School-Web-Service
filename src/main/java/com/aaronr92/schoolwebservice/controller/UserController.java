@@ -1,6 +1,8 @@
 package com.aaronr92.schoolwebservice.controller;
 
 import com.aaronr92.schoolwebservice.dto.PasswordChange;
+import com.aaronr92.schoolwebservice.dto.RoleOperation;
+import com.aaronr92.schoolwebservice.dto.UserDTO;
 import com.aaronr92.schoolwebservice.entity.User;
 import com.aaronr92.schoolwebservice.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -22,15 +24,26 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("/add")
-    ResponseEntity<User> register(@Valid @RequestBody User user,
-                                  @RequestParam(required = false) String role) {
-        System.out.println(user.toString());
+    @PostMapping("/signup")
+    ResponseEntity<User> signup(@Valid @RequestBody UserDTO user) {
         URI uri = URI.create(ServletUriComponentsBuilder
                 .fromCurrentContextPath()
-                .path("/api/user/add")
+                .path("/api/user/register")
                 .toUriString());
-        return ResponseEntity.created(uri).body(userService.registerNewUser(user, role));
+        return ResponseEntity.created(uri).body(userService.signup(user));
+    }
+
+    @PutMapping("/change/role")
+    ResponseEntity<Void> changeRole(@RequestBody RoleOperation roleOperation) {
+        userService.changeRole(roleOperation);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/change/username")
+    ResponseEntity<Void> changeUsername(@RequestParam("old_username") String oldUsername,
+                                        @RequestParam("new_username") String newUsername) {
+        userService.changeUsername(oldUsername, newUsername);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/change/password")
@@ -39,18 +52,18 @@ public class UserController {
         return ResponseEntity.ok().body(userService.changePassword(user, passwordChange));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/find/all")
     ResponseEntity<List<User>> getUsers() {
         return ResponseEntity.ok().body(userService.getAllUsers());
     }
 
-    @DeleteMapping
-    ResponseEntity<?> deleteUser(@RequestParam String username) {
-        return new ResponseEntity<>(userService.deleteUser(username), HttpStatus.NO_CONTENT);
+    @GetMapping("/find")
+    ResponseEntity<User> getUser(@RequestParam String username) {
+        return ResponseEntity.ok(((User) userService.loadUserByUsername(username)));
     }
 
-    /*@GetMapping()
-    ResponseEntity<User> getUser(@RequestParam String username) {
-        return ResponseEntity.ok().body((User) userService.loadUserByUsername(username));
-    }*/
+    @DeleteMapping
+    ResponseEntity<Map<String, String>> deleteUser(@RequestParam String username) {
+        return new ResponseEntity<>(userService.deleteUser(username), HttpStatus.NO_CONTENT);
+    }
 }

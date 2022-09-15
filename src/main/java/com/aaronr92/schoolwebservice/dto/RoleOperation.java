@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter @Setter
 @AllArgsConstructor
-public class RoleChanged {
+public class RoleOperation {
 
     private String username;
 

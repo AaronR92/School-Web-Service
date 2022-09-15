@@ -26,7 +26,7 @@ import java.util.*;
 @NoArgsConstructor
 @Builder
 @ToString
-@Entity(name = "user")
+@Entity(name = "users")
 public class User implements UserDetails {
 
     @Id
@@ -68,9 +68,6 @@ public class User implements UserDetails {
     @Transient
     @ReadOnlyProperty
     private int age;    // will not create 'age' column
-
-    @JsonIgnore
-    private boolean isUsernameChanged;
 
     @JsonIgnore
     private boolean isNonLocked;
