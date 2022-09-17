@@ -4,6 +4,7 @@ import com.aaronr92.schoolwebservice.dto.PasswordChange;
 import com.aaronr92.schoolwebservice.dto.RoleOperation;
 import com.aaronr92.schoolwebservice.dto.UserDTO;
 import com.aaronr92.schoolwebservice.entity.User;
+import com.aaronr92.schoolwebservice.repository.GroupRepository;
 import com.aaronr92.schoolwebservice.repository.UserRepository;
 import com.aaronr92.schoolwebservice.util.Role;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,7 @@ import java.util.Optional;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
@@ -63,6 +65,7 @@ public class UserService implements UserDetailsService {
                 .phone(userDTO.getPhone())
                 .dateOfBirth(userDTO.getDateOfBirth())
                 .gender(userDTO.getGender())
+                .group(groupRepository.findGroupByGroupNumber(userDTO.getGroup()))
                 .isNonLocked(true)
                 .build();
 

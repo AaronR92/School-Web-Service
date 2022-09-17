@@ -4,6 +4,10 @@
 
 |                                   | Administrator | Teacher | Student | Anonymous |
 |:----------------------------------|:--------------|:--------|:--------|:----------|
+| `GET /api/group`                  | +             | +       | -       | -         |
+| `GET /api/group/all`              | +             | +       | -       | -         |
+| `POST /api/group`                 | +             | -       | -       | -         |
+| `DELETE /api/group`               | +             | -       | -       | -         |
 | `POST /api/user/signup`           | -             | -       | -       | +         |
 | `PUT /api/user/change/password`   | -             | +       | +       | -         |
 | `PUT /api/user/change/role`       | +             | -       | -       | -         |

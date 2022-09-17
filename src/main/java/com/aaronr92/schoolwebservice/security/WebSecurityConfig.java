@@ -31,8 +31,9 @@ public class WebSecurityConfig {
         http.httpBasic()
                 .authenticationEntryPoint(authenticationEntryPoint);
         http.csrf().disable();
+
         http.authorizeRequests()
-                .antMatchers("login/**").permitAll()
+                .antMatchers("/login/**").permitAll()
                 .antMatchers(POST, "/api/user/signup").anonymous()
                 .antMatchers(PUT, "/api/user/change/password").hasAnyAuthority(ROLE_TEACHER.name(), ROLE_STUDENT.name())
                 .antMatchers(PUT, "/api/user/change/role").hasAnyAuthority(ROLE_ADMINISTRATOR.name())
@@ -43,7 +44,11 @@ public class WebSecurityConfig {
                 .antMatchers(POST, "api/student/mark/add").hasAuthority(ROLE_TEACHER.name())
                 .antMatchers(DELETE, "api/student/mark/delete").hasAuthority(ROLE_TEACHER.name())
                 .antMatchers(POST, "/subject/new").hasAuthority(ROLE_ADMINISTRATOR.name())
-                .antMatchers(DELETE, "/api/subject/delete").hasAuthority(ROLE_ADMINISTRATOR.name());
+                .antMatchers(DELETE, "/api/subject/delete").hasAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers(GET, "/api/group/**").hasAnyAuthority(ROLE_TEACHER.name(), ROLE_ADMINISTRATOR.name())
+                .antMatchers(POST, "/api/group").hasAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers(DELETE, "/api/group").hasAuthority(ROLE_ADMINISTRATOR.name());
+
         http.sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         return http.build();

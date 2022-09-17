@@ -2,10 +2,7 @@ package com.aaronr92.schoolwebservice.entity;
 
 import com.aaronr92.schoolwebservice.util.Gender;
 import com.aaronr92.schoolwebservice.util.Role;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import lombok.*;
 import org.hibernate.annotations.SortNatural;
 import org.springframework.data.annotation.ReadOnlyProperty;
@@ -71,6 +68,11 @@ public class User implements UserDetails {
 
     @JsonIgnore
     private boolean isNonLocked;
+
+    @JsonBackReference
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Group group;
 
     @JsonManagedReference
     @JoinColumn(name = "user_id")

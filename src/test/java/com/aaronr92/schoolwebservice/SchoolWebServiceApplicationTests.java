@@ -2,6 +2,8 @@ package com.aaronr92.schoolwebservice;
 
 import com.aaronr92.schoolwebservice.dto.RoleOperation;
 import com.aaronr92.schoolwebservice.dto.UserDTO;
+import com.aaronr92.schoolwebservice.entity.Group;
+import com.aaronr92.schoolwebservice.repository.GroupRepository;
 import com.aaronr92.schoolwebservice.repository.MarkRepository;
 import com.aaronr92.schoolwebservice.repository.SubjectRepository;
 import com.aaronr92.schoolwebservice.repository.UserRepository;
@@ -25,7 +27,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Random;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -56,14 +57,27 @@ class SchoolWebServiceApplicationTests {
     @Autowired
     private SubjectRepository subjectRepository;
 
-    private Random random = new Random();
+    @Autowired
+    private GroupRepository groupRepository;
+
+    private final Random random = new Random();
 
     //reset database
     @Test
     @Order(1)
     void resetDb() {
         userRepository.deleteAll();
+        groupRepository.deleteAll();
+        markRepository.deleteAll();
+        subjectRepository.deleteAll();
+
         assertThat(userRepository.findAll().size())
+                .isEqualTo(0);
+        assertThat(groupRepository.findAll().size())
+                .isEqualTo(0);
+        assertThat(markRepository.findAll().size())
+                .isEqualTo(0);
+        assertThat(subjectRepository.findAll().size())
                 .isEqualTo(0);
     }
 
@@ -76,6 +90,65 @@ class SchoolWebServiceApplicationTests {
 
     @Test
     @Order(3)
+    void addNewGroupAnonymous() throws Exception{
+        mvc.perform(post("/api/group")
+                .content(groupToJson(Group.builder()
+                        .groupNumber(0)
+                        .groupName("0-teachers")
+                        .build())))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @Order(4)
+    void addNewGroupTeacherPerm() throws Exception{
+        mvc.perform(post("/api/group").with(user(email).password(password).roles("TEACHER"))
+                .content(groupToJson(Group.builder()
+                        .groupNumber(0)
+                        .groupName("0-teachers")
+                        .build())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Order(5)
+    void addNewTeacherGroupAdminPerm() throws Exception{
+        mvc.perform(post("/api/group").with(user(email).password(password).roles("ADMINISTRATOR"))
+                .content(groupToJson(Group.builder()
+                        .groupNumber(0)
+                        .groupName("0-teachers")
+                        .build())).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.group_number", is(0)))
+                .andExpect(jsonPath("$.group_name", is("0-teachers")));
+    }
+
+    @Test
+    @Order(6)
+    void addNewStudentGroupAdminPerm() throws Exception{
+        mvc.perform(post("/api/group").with(user(email).password(password).roles("ADMINISTRATOR"))
+                .content(groupToJson(Group.builder()
+                        .groupNumber(22)
+                        .groupName("22-Д9-3ИНС")
+                        .build())).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.group_number", is(22)))
+                .andExpect(jsonPath("$.group_name", is("22-Д9-3ИНС")));
+    }
+
+    @Test
+    @Order(7)
+    void addExistingStudentGroupAdminPerm() throws Exception{
+        mvc.perform(post("/api/group").with(user(email).password(password).roles("ADMINISTRATOR"))
+                .content(groupToJson(Group.builder()
+                        .groupNumber(22)
+                        .groupName("22-Д9-3ИНС")
+                        .build())).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(8)
     void registerNewUser_1() throws Exception {
         mvc.perform(post("/api/user/signup")
                 .content(userToJson(UserDTO.builder()
@@ -93,7 +166,7 @@ class SchoolWebServiceApplicationTests {
     }
 
     @Test
-    @Order(3)
+    @Order(9)
     void registerNewUser_2() throws Exception {
         mvc.perform(post("/api/user/signup")
                 .content(userToJson(UserDTO.builder()
@@ -111,14 +184,14 @@ class SchoolWebServiceApplicationTests {
     }
 
     @Test
-    @Order(4)
+    @Order(10)
     void registerUserWithoutRequestBody() throws Exception {
         mvc.perform(post("/api/user/signup"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    @Order(5)
+    @Order(11)
     void changeRoleForTeacherWithAuth() throws Exception {
         mvc.perform(put("/api/user/change/role").with(user(email).password(password).roles("ADMINISTRATOR"))
                 .content(roleOperationToJson(new RoleOperation("0_1", "teacher", Action.GRANT)))
@@ -127,7 +200,7 @@ class SchoolWebServiceApplicationTests {
     }
 
     @Test
-    @Order(6)
+    @Order(12)
     void changeRoleForTeacherWithoutAuth() throws Exception {
         mvc.perform(put("/api/user/change/role")
                 .content(roleOperationToJson(new RoleOperation("0_1", "teacher", Action.GRANT)))
@@ -136,7 +209,7 @@ class SchoolWebServiceApplicationTests {
     }
 
     @Test
-    @Order(7)
+    @Order(13)
     void changeRoleForTeacherWithAuthAndExistingRole() throws Exception {
         mvc.perform(put("/api/user/change/role").with(user(email).password(password).roles("ADMINISTRATOR"))
                         .content(roleOperationToJson(new RoleOperation("0_1", "teacher", Action.GRANT)))
@@ -145,7 +218,7 @@ class SchoolWebServiceApplicationTests {
     }
 
     @Test
-    @Order(8)
+    @Order(14)
     void changeRoleForTeacherWithAuthAndInvalidRole() throws Exception {
         mvc.perform(put("/api/user/change/role").with(user(email).password(password).roles("ADMINISTRATOR"))
                         .content(roleOperationToJson(new RoleOperation("0_1", "bot", Action.GRANT)))
@@ -154,7 +227,7 @@ class SchoolWebServiceApplicationTests {
     }
 
     @Test
-    @Order(9)
+    @Order(15)
     void changeUsernameForTeacherWithStudentAuth() throws Exception {
         mvc.perform(put("/api/user/change/username")
                         .param("old_username", "   0_1")
@@ -163,7 +236,7 @@ class SchoolWebServiceApplicationTests {
     }
 
     @Test
-    @Order(10)
+    @Order(16)
     void changeUsernameForTeacherWithTeacherAuth() throws Exception {
         mvc.perform(put("/api/user/change/username")
                         .param("old_username", "0_1")
@@ -172,7 +245,7 @@ class SchoolWebServiceApplicationTests {
     }
 
     @Test
-    @Order(11)
+    @Order(17)
     void changeUsernameForTeacherWithAdminAuth() throws Exception {
         mvc.perform(put("/api/user/change/username")
                         .param("old_username", "   0_1")
@@ -181,7 +254,7 @@ class SchoolWebServiceApplicationTests {
     }
 
     @Test
-    @Order(12)
+    @Order(18)
     void checkTeacherUsername() throws Exception {
         mvc.perform(get("/api/user/find")
                 .param("username", "  alechuang ")
@@ -211,6 +284,13 @@ class SchoolWebServiceApplicationTests {
         json.put("username", roleOperation.getUsername());
         json.put("role", roleOperation.getRole());
         json.put("action", roleOperation.getAction());
+        return json.toString();
+    }
+
+    private String groupToJson(Group group) throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("group_number", group.getGroupNumber());
+        json.put("group_name", group.getGroupName());
         return json.toString();
     }
 
