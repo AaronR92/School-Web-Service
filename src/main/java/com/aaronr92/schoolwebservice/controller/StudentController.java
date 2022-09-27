@@ -24,7 +24,7 @@ public class StudentController {
     }
 
     //TODO
-    // not finished!
+    // test this!
     @DeleteMapping("/mark/delete")
     public ResponseEntity<?> deleteMark(@AuthenticationPrincipal User user,
                     @RequestBody MarkDTO markDTO) {

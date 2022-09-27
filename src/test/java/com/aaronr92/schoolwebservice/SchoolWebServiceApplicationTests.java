@@ -28,6 +28,7 @@ import java.util.Random;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -337,6 +338,25 @@ class SchoolWebServiceApplicationTests {
                 .andExpect(jsonPath("$.users[1].username", is("22_2")))
                 .andExpect(jsonPath("$.users[0].name", is("Madeline")))
                 .andExpect(jsonPath("$.group_number", is(22)));
+    }
+
+    @Test
+    @Order(26)
+    void signupUserWithWrongGroup() throws Exception {
+        mvc.perform(post("/api/user/signup")
+                        .content(userToJson(UserDTO.builder()
+                                .name("Alena  ")
+                                .lastname("Lu")
+                                .email("alenakaLulu@gmail.com")
+                                .group(23)
+                                .numberByOrder(1)
+                                .password("password")
+                                .phone("+79181451620")
+                                .gender(Gender.FEMALE)
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertEquals("Group does not exist!", result.getResponse().getErrorMessage()));
     }
 
     private String userToJson(UserDTO user) throws JSONException {

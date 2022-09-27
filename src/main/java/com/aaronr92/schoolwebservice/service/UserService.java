@@ -3,6 +3,7 @@ package com.aaronr92.schoolwebservice.service;
 import com.aaronr92.schoolwebservice.dto.PasswordChange;
 import com.aaronr92.schoolwebservice.dto.RoleOperation;
 import com.aaronr92.schoolwebservice.dto.UserDTO;
+import com.aaronr92.schoolwebservice.entity.Group;
 import com.aaronr92.schoolwebservice.entity.User;
 import com.aaronr92.schoolwebservice.repository.GroupRepository;
 import com.aaronr92.schoolwebservice.repository.UserRepository;
@@ -55,6 +56,7 @@ public class UserService implements UserDetailsService {
                     String.format("User with phone number [%s] already exists!", userDTO.getPhone()));
 
         checkValidPassword(userDTO.getPassword());
+        checkValidGroup(userDTO.getGroup());
 
         User user = User.builder()
                 .name(userDTO.getName().trim())
@@ -199,5 +201,10 @@ public class UserService implements UserDetailsService {
         }
 
         return null;
+    }
+
+    private void checkValidGroup(int groupNumber) {
+        if (groupRepository.findGroupByGroupNumber(groupNumber) == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Group does not exist!");
     }
 }
