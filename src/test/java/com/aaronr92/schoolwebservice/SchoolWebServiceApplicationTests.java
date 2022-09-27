@@ -265,6 +265,80 @@ class SchoolWebServiceApplicationTests {
                 .andExpect(jsonPath("$.email", is("alechuang@gmail.com")));
     }
 
+    @Test
+    @Order(19)
+    void addNewStudentToGroup22() throws Exception {
+        mvc.perform(post("/api/user/signup")
+                        .content(userToJson(UserDTO.builder()
+                                .name("Aiden ")
+                                .lastname("Lozano")
+                                .email("aidenLoz@gmail.com")
+                                .group(22)
+                                .numberByOrder(2)
+                                .password("password")
+                                .phone("+79181451619")
+                                .gender(Gender.MALE)
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @Order(20)
+    void findGroupWithoutParamsUsingTeacherRole() throws Exception {
+        mvc.perform(get("/api/group").with(user(email).password(password).roles("TEACHER")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(21)
+    void findUnregisteredGroupUsingNumberAndAdminRole() throws Exception {
+        mvc.perform(get("/api/group")
+                        .param("number", "1")
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Order(22)
+    void findUnregisteredGroupUsingNameAndTeacherRole() throws Exception {
+        mvc.perform(get("/api/group")
+                        .param("name", "SomeGroupName")
+                        .with(user(email).password(password).roles("TEACHER")))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Order(23)
+    void find22ndGroupUsingNumberAndTeacherRole() throws Exception {
+        mvc.perform(get("/api/group")
+                        .param("number", "22")
+                        .with(user(email).password(password).roles("TEACHER")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(24)
+    void find22ndGroupUsingNameAndAdminRole() throws Exception {
+        mvc.perform(get("/api/group")
+                        .param("name", "22-Д9-3ИНС")
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(25)
+    void check22ndGroupsContent() throws Exception {
+        mvc.perform(get("/api/group")
+                    .param("number", "22")
+                    .with(user(email).password(password).roles("TEACHER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.users[0].username", is("22_1")))
+                .andExpect(jsonPath("$.users[1].username", is("22_2")))
+                .andExpect(jsonPath("$.users[0].name", is("Madeline")))
+                .andExpect(jsonPath("$.group_number", is(22)));
+    }
+
     private String userToJson(UserDTO user) throws JSONException {
         JSONObject json = new JSONObject();
         json.put("name", user.getName());
@@ -274,7 +348,7 @@ class SchoolWebServiceApplicationTests {
         json.put("number_by_order", user.getNumberByOrder());
         json.put("password", user.getPassword());
         json.put("phone", user.getPhone());
-        json.put("dob", String.format("%d.0%d.%d", random.nextInt(18) + 10, random.nextInt(9) + 1, random.nextInt(8) + 2006));
+        json.put("dob", String.format("%d.0%d.%d", random.nextInt(18) + 10, random.nextInt(9) + 1, random.nextInt(8) + 2004));
         json.put("gender", user.getGender());
         return json.toString();
     }

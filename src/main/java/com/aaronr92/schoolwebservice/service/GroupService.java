@@ -18,9 +18,17 @@ public class GroupService {
 
     public Group findGroup(Integer number, String name) {
         if (number != null) {
-            return groupRepository.findGroupByGroupNumber(number);
+            Group group = groupRepository.findGroupByGroupNumber(number);
+            if (group != null)
+                return groupRepository.findGroupByGroupNumber(number);
+            else
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Group does not exist");
         } else if (name != null) {
-            return groupRepository.findGroupByGroupName(name);
+            Group group = groupRepository.findGroupByGroupName(name);
+            if (group != null)
+                return groupRepository.findGroupByGroupName(name);
+            else
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Group does not exist");
         }
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You must provide at least and only one param!");
     }
