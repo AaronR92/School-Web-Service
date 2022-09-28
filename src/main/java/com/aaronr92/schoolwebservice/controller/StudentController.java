@@ -16,7 +16,7 @@ import java.util.Map;
 public class StudentController {
     private final MarkService markService;
 
-    @PostMapping("/mark/add")
+    @PostMapping("/mark")
     public ResponseEntity<Map<String, String>> addMark(@AuthenticationPrincipal User user,
                                                 @RequestBody MarkDTO markDTO) {
         markService.addMark(user, markDTO);
@@ -24,8 +24,8 @@ public class StudentController {
     }
 
     //TODO
-    // test this!
-    @DeleteMapping("/mark/delete")
+    // test this
+    @DeleteMapping("/mark")
     public ResponseEntity<?> deleteMark(@AuthenticationPrincipal User user,
                     @RequestBody MarkDTO markDTO) {
         markService.deleteMark(user, markDTO);

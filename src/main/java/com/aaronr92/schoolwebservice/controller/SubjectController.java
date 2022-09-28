@@ -1,5 +1,6 @@
 package com.aaronr92.schoolwebservice.controller;
 
+import com.aaronr92.schoolwebservice.dto.SubjectDTO;
 import com.aaronr92.schoolwebservice.entity.Subject;
 import com.aaronr92.schoolwebservice.service.SubjectService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ public class SubjectController {
     private final SubjectService subjectService;
 
     @PostMapping
-    public ResponseEntity<Map<String, String>> createNewSubject(@Valid @RequestBody Subject subject) {
+    public ResponseEntity<Map<String, String>> createNewSubject(@Valid @RequestBody SubjectDTO subject) {
         URI uri = URI.create(ServletUriComponentsBuilder
                 .fromCurrentContextPath()
                 .path("/api/subject/new")
@@ -27,15 +28,14 @@ public class SubjectController {
         return ResponseEntity.created(uri).body(subjectService.addNewSubject(subject));
     }
 
-    /*
-    TODO
-     patch mapping "updateSubject"
-     */
+    @PutMapping
+    public ResponseEntity<Subject> updateTeacher(@RequestParam String operation, @RequestBody SubjectDTO subjectDTO) {
+        return ResponseEntity.ok(subjectService.updateTeacher(operation, subjectDTO));
+    }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteSubject(@RequestParam String subject,
-                                    @RequestParam String teacher_username) {
-        subjectService.deleteSubject(subject, teacher_username);
+    public ResponseEntity<Void> deleteSubject(@RequestParam String subject) {
+        subjectService.deleteSubject(subject);
         return ResponseEntity.noContent().build();
     }
 }

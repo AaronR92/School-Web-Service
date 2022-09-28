@@ -28,38 +28,34 @@ public class MarkService {
 
     public void addMark(User user, MarkDTO markDTO) {
         validateTeacher(user);
-        validateMark(user, markDTO);
+        validateMark(markDTO);
 
         User student = userRepository.findUserByUsername(markDTO.getStudent()).get();
-        Optional<Mark> m = markRepository.findDistinctFirstByUser(student);
-        if (m.isPresent()) {
-            if (m.get().getDate().equals(LocalDate.now()))
+        Optional<Mark> mark = markRepository.findDistinctFirstByUser(student);
+        if (mark.isPresent()) {
+            if (mark.get().getDate().equals(LocalDate.now()))
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "This student has already received a mark today!");
         }
 
-        Optional<Subject> subject = subjectRepository.findSubjectByNameIgnoreCaseAndTeacher(markDTO.getSubjectName(), user.getUsername());
-        if (subject.isEmpty())
+        Subject subject = subjectRepository.findSubjectByNameIgnoreCase(markDTO.getSubjectName());
+        if (!subject.getTeachers().contains(user)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Teacher does not teach this subject!");
-        if (!subject.get().getTeacher().equals(user.getUsername())) {
-            User teacher = userRepository.findUserByUsername(subject.get().getTeacher()).get();
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    String.format("Only %s %s can handle marks for this subject!", teacher.getName(), teacher.getLastname()));
+                    "You don't teach this subject!");
         }
 
-        Mark mark = Mark.builder()
+        Mark m = Mark.builder()
                 .user(userRepository.findUserByUsername(markDTO.getStudent()).get())
-                .subject(subject.get())
+                .subject(subject)
                 .mark(markDTO.getMark())
                 .teacher(String.format("%s %s", user.getName(), user.getLastname()))
                 .build();
-        markRepository.save(mark);
+        markRepository.save(m);
     }
 
     public void deleteMark(User user, MarkDTO markDTO) {
         validateTeacher(user);
-        validateMark(user, markDTO);
+        validateMark(markDTO);
 
         User student = userRepository.findUserByUsername(markDTO.getStudent()).get();
         Optional<Mark> mark = markRepository.findDistinctFirstByUser(student);
@@ -76,11 +72,11 @@ public class MarkService {
         markRepository.delete(mark.get());
     }
 
-    private void validateMark(User user, MarkDTO markDTO) {
+    private void validateMark(MarkDTO markDTO) {
         if (!userRepository.existsUserByUsername(markDTO.getStudent()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "This student does not exist!");
-        if (!subjectRepository.existsByNameIgnoreCaseAndTeacher(markDTO.getSubjectName(), user.getUsername()))
+        if (!subjectRepository.existsByNameIgnoreCase(markDTO.getSubjectName()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "This subject does not exist!");
 
@@ -89,7 +85,7 @@ public class MarkService {
                 receiver.getRoles().contains(Role.ROLE_TEACHER) ||
                 !receiver.getRoles().contains(Role.ROLE_STUDENT)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Only student can get marks!");
+                    "Only students can get marks!");
         }
     }
 

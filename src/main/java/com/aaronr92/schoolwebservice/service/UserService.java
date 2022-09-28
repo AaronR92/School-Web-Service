@@ -70,7 +70,12 @@ public class UserService implements UserDetailsService {
                 .isNonLocked(true)
                 .build();
 
-        user.grantAuthority(Role.ROLE_STUDENT);
+        if (userRepository.count() < 1) {
+            user.grantAuthority(Role.ROLE_ADMINISTRATOR);
+        } else {
+            user.grantAuthority(Role.ROLE_STUDENT);
+        }
+
 
         log.info("Saving new user {} with username {} to the database",
                 user.getName(),
@@ -81,7 +86,7 @@ public class UserService implements UserDetailsService {
 
     public Map<String, String> deleteUser(String username) {
         if (!userRepository.existsUserByUsername(username))
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found!");
 
         User user = userRepository.findUserByUsername(username).get();
 
@@ -135,7 +140,7 @@ public class UserService implements UserDetailsService {
         newUsername = newUsername.trim();
         Optional<User> userOptional = userRepository.findUserByUsername(oldUsername.trim());
         if (userOptional.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found!");
         if (userRepository.existsUserByUsername(newUsername))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Username [%s] is already occupied", newUsername));
         User user = userOptional.get();
@@ -193,6 +198,6 @@ public class UserService implements UserDetailsService {
 
     private void checkValidGroup(int groupNumber) {
         if (groupRepository.findGroupByGroupNumber(groupNumber) == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Group does not exist!");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Group does not exist!");
     }
 }
