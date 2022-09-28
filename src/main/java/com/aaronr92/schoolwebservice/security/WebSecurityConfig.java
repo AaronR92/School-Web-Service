@@ -43,8 +43,8 @@ public class WebSecurityConfig {
                 .antMatchers(DELETE, "/api/user").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(POST, "api/student/mark/add").hasAuthority(ROLE_TEACHER.name())
                 .antMatchers(DELETE, "api/student/mark/delete").hasAuthority(ROLE_TEACHER.name())
-                .antMatchers(POST, "/subject/new").hasAuthority(ROLE_ADMINISTRATOR.name())
-                .antMatchers(DELETE, "/api/subject/delete").hasAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers(POST, "/api/subject").hasAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers(DELETE, "/api/subject").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(GET, "/api/group/**").hasAnyAuthority(ROLE_TEACHER.name(), ROLE_ADMINISTRATOR.name())
                 .antMatchers(POST, "/api/group").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(DELETE, "/api/group").hasAuthority(ROLE_ADMINISTRATOR.name());

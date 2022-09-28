@@ -18,7 +18,7 @@ public class SubjectController {
 
     private final SubjectService subjectService;
 
-    @PostMapping("/new")
+    @PostMapping
     public ResponseEntity<Map<String, String>> createNewSubject(@Valid @RequestBody Subject subject) {
         URI uri = URI.create(ServletUriComponentsBuilder
                 .fromCurrentContextPath()
@@ -27,7 +27,12 @@ public class SubjectController {
         return ResponseEntity.created(uri).body(subjectService.addNewSubject(subject));
     }
 
-    @DeleteMapping("/delete")
+    /*
+    TODO
+     patch mapping "updateSubject"
+     */
+
+    @DeleteMapping
     public ResponseEntity<Void> deleteSubject(@RequestParam String subject,
                                     @RequestParam String teacher_username) {
         subjectService.deleteSubject(subject, teacher_username);

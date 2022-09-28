@@ -268,7 +268,7 @@ class SchoolWebServiceApplicationTests {
 
     @Test
     @Order(19)
-    void addNewStudentToGroup22() throws Exception {
+    void signupNewStudentToGroup22() throws Exception {
         mvc.perform(post("/api/user/signup")
                         .content(userToJson(UserDTO.builder()
                                 .name("Aiden ")
@@ -357,6 +357,25 @@ class SchoolWebServiceApplicationTests {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(result -> assertEquals("Group does not exist!", result.getResponse().getErrorMessage()));
+    }
+
+    @Test
+    @Order(27)
+    void find22ndGroupWithStudent() throws Exception {
+        mvc.perform(get("/api/group")
+                    .with(user(email).password(password).roles("STUDENT")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Order(28)
+    void changeExistingTeacherUsernameWithAdmin() throws Exception {
+        mvc.perform(put("/api/user/change/username")
+                    .param("old_username", "alechuang")
+                    .param("new_username", "alechuang")
+                    .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertEquals("Username [alechuang] is already occupied", result.getResponse().getErrorMessage()));
     }
 
     private String userToJson(UserDTO user) throws JSONException {

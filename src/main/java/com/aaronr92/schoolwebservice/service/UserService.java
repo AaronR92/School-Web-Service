@@ -3,7 +3,6 @@ package com.aaronr92.schoolwebservice.service;
 import com.aaronr92.schoolwebservice.dto.PasswordChange;
 import com.aaronr92.schoolwebservice.dto.RoleOperation;
 import com.aaronr92.schoolwebservice.dto.UserDTO;
-import com.aaronr92.schoolwebservice.entity.Group;
 import com.aaronr92.schoolwebservice.entity.User;
 import com.aaronr92.schoolwebservice.repository.GroupRepository;
 import com.aaronr92.schoolwebservice.repository.UserRepository;
@@ -162,17 +161,6 @@ public class UserService implements UserDetailsService {
         passwordChange.setStatus("Password has changed successfully!");
         return passwordChange;
     }
-
-    //    public Map<String, String> changeUsername(User user, String username) {
-//        if (user.isUsernameChanged()) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-//                    "Username was already changed");
-//        }
-//
-//        user.setUsername(username);
-//        user.setUsernameChanged(true);
-//        return Map.of("status", "Username was changed successfully");
-//    }
 
     private void checkValidPassword(String password) {
         if (password.length() < 8)

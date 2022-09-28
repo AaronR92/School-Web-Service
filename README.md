@@ -17,5 +17,5 @@
 | `DELETE /api/user`                | +             | -       | -       | -         |
 | `POST /api/student/mark/add`      | -             | +       | -       | -         |
 | `DELETE /api/student/mark/delete` | -             | +       | -       | -         |
-| `POST /api/subject/new`           | +             | -       | -       | -         |
-| `DELETE /api/subject/delete`      | +             | -       | -       | -         |
+| `POST /api/subject`               | +             | -       | -       | -         |
+| `DELETE /api/subject`             | +             | -       | -       | -         |
