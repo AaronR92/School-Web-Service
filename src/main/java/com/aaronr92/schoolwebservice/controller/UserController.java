@@ -25,7 +25,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
-    ResponseEntity<User> signup(@Valid @RequestBody UserDTO user) {
+    public ResponseEntity<User> signup(@Valid @RequestBody UserDTO user) {
         URI uri = URI.create(ServletUriComponentsBuilder
                 .fromCurrentContextPath()
                 .path("/api/user/register")
@@ -34,36 +34,36 @@ public class UserController {
     }
 
     @PutMapping("/change/role")
-    ResponseEntity<Void> changeRole(@RequestBody RoleOperation roleOperation) {
+    public ResponseEntity<Void> changeRole(@RequestBody RoleOperation roleOperation) {
         userService.changeRole(roleOperation);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/change/username")
-    ResponseEntity<Void> changeUsername(@RequestParam("old_username") String oldUsername,
+    public ResponseEntity<Void> changeUsername(@RequestParam("old_username") String oldUsername,
                                         @RequestParam("new_username") String newUsername) {
         userService.changeUsername(oldUsername, newUsername);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/change/password")
-    ResponseEntity<PasswordChange> changePassword(@AuthenticationPrincipal User user,
+    public ResponseEntity<PasswordChange> changePassword(@AuthenticationPrincipal User user,
                                                   @RequestBody PasswordChange passwordChange) {
         return ResponseEntity.ok().body(userService.changePassword(user, passwordChange));
     }
 
     @GetMapping("/find/all")
-    ResponseEntity<List<User>> getUsers() {
+    public ResponseEntity<List<User>> getUsers() {
         return ResponseEntity.ok().body(userService.getAllUsers());
     }
 
     @GetMapping("/find")
-    ResponseEntity<User> getUser(@RequestParam String username) {
+    public ResponseEntity<User> getUser(@RequestParam String username) {
         return ResponseEntity.ok(((User) userService.loadUserByUsername(username)));
     }
 
     @DeleteMapping
-    ResponseEntity<Map<String, String>> deleteUser(@RequestParam String username) {
+    public ResponseEntity<Map<String, String>> deleteUser(@RequestParam String username) {
         return new ResponseEntity<>(userService.deleteUser(username), HttpStatus.NO_CONTENT);
     }
 }

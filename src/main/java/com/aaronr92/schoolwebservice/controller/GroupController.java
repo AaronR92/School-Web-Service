@@ -19,18 +19,18 @@ public class GroupController {
     private final GroupService groupService;
 
     @GetMapping
-    ResponseEntity<Group> findGroup(@RequestParam(required = false) Integer number,
+    public ResponseEntity<Group> findGroup(@RequestParam(required = false) Integer number,
                                     @RequestParam(required = false) String name) {
         return ResponseEntity.ok(groupService.findGroup(number, name));
     }
 
     @GetMapping("/all")
-    ResponseEntity<List<String>> findAllNames() {
+    public ResponseEntity<List<String>> findAllGroupNames() {
         return ResponseEntity.ok(groupService.findAllNames());
     }
 
     @PostMapping
-    ResponseEntity<Group> addNewGroup(@Valid @RequestBody Group group) {
+    public ResponseEntity<Group> addNewGroup(@Valid @RequestBody Group group) {
         URI url = URI.create(ServletUriComponentsBuilder
                 .fromCurrentContextPath()
                 .path("/api/group")
@@ -39,7 +39,7 @@ public class GroupController {
     }
 
     @DeleteMapping
-    ResponseEntity<Void> deleteGroup(@RequestParam(required = false) Integer number,
+    public ResponseEntity<Void> deleteGroup(@RequestParam(required = false) Integer number,
                                      @RequestParam(required = false) String name) {
         groupService.deleteGroup(number, name);
         return ResponseEntity.noContent().build();

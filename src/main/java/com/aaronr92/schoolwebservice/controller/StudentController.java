@@ -17,16 +17,16 @@ public class StudentController {
     private final MarkService markService;
 
     @PostMapping("/mark/add")
-    ResponseEntity<Map<String, String>> addMark(@AuthenticationPrincipal User user,
+    public ResponseEntity<Map<String, String>> addMark(@AuthenticationPrincipal User user,
                                                 @RequestBody MarkDTO markDTO) {
         markService.addMark(user, markDTO);
         return ResponseEntity.ok().body(Map.of("status", "success"));
     }
 
     //TODO
-    // not finished!
+    // test this!
     @DeleteMapping("/mark/delete")
-    ResponseEntity<?> deleteMark(@AuthenticationPrincipal User user,
+    public ResponseEntity<?> deleteMark(@AuthenticationPrincipal User user,
                     @RequestBody MarkDTO markDTO) {
         markService.deleteMark(user, markDTO);
         return ResponseEntity.noContent().build();
