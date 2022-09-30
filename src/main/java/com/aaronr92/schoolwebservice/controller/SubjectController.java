@@ -29,13 +29,11 @@ public class SubjectController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Subject> updateTeacher(@PathVariable Long id, @RequestParam String operation, @RequestParam String teacher) {
-        return ResponseEntity.ok(subjectService.updateTeacher(id, operation, teacher));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Subject> updateName(@PathVariable Long id, @RequestParam String name) {
-        return ResponseEntity.ok(subjectService.updateSubject(id, name));
+    public ResponseEntity<Subject> updateSubject(@PathVariable Long id,
+                                                 @RequestParam(required = false) String operation,
+                                                 @RequestParam(required = false) String teacher,
+                                                 @RequestParam(required = false) String name) {
+        return ResponseEntity.ok(subjectService.update(id, operation, teacher, name));
     }
 
     @DeleteMapping

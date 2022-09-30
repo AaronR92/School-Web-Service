@@ -25,9 +25,14 @@ public class SubjectService {
         if (subjectRepository.existsByNameIgnoreCase(subject.getSubject_name()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This subject already exists!");
 
+        Optional<User> teacher = userRepository.findUserByUsername(subject.getTeacher_username());
+
+        checkTeacher(teacher);
+
         subjectRepository.save(Subject.builder()
                 .name(subject.getSubject_name())
                 .build());
+
         return Map.of("status", "success!");
     }
 
@@ -39,30 +44,32 @@ public class SubjectService {
         subjectRepository.delete(subject);
     }
 
-    public Subject updateTeacher(Long id, String operation, String teacher) {
+    public Subject update(Long id, String operation, String teacher, String name) {
+        if (operation != null && teacher != null) {
+            return updateTeacher(id, operation, teacher);
+        } else if (name != null) {
+            return updateSubjectName(id, name);
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+    }
+
+    public Subject updateTeacher(Long id, String operation, String teacherUsername) {
         Optional<Subject> subject = subjectRepository.findById(id);
 
         if (subject.isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Subject not found!");
 
-        Optional<User> user = userRepository.findUserByUsername(teacher);
+        Optional<User> teacher = userRepository.findUserByUsername(teacherUsername.trim());
 
-        if (user.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "This teacher is not registered!");
-        }
-        if (!user.get().getRoles().contains(Role.ROLE_TEACHER)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Only teachers can lead subjects!");
-        }
+        checkTeacher(teacher);
 
-        switch (operation) {
+        switch (operation.trim()) {
             case "ADD": {
-                subject.get().addTeacher(user.get());
+                subject.get().addTeacher(teacher.get());
                 return subjectRepository.save(subject.get());
             }
             case "REMOVE": {
-                subject.get().removeTeacher(user.get());
+                subject.get().removeTeacher(teacher.get());
                 return subjectRepository.save(subject.get());
             }
             default:
@@ -72,19 +79,30 @@ public class SubjectService {
 
     }
 
-    public Subject updateSubject(Long id, String name) {
+    public Subject updateSubjectName(Long id, String name) {
         Optional<Subject> subject = subjectRepository.findById(id);
 
         if (subject.isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Subject not found!");
 
-        if (subjectRepository.existsByNameIgnoreCase(name)) {
+        if (subjectRepository.existsByNameIgnoreCase(name.trim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "This subject already exists!");
         }
 
-        subject.get().setName(name);
+        subject.get().setName(name.trim());
         return subjectRepository.save(subject.get());
+    }
+
+    private void checkTeacher(Optional<User> teacher) {
+        if (teacher.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "This teacher is not registered!");
+        }
+        if (!teacher.get().getRoles().contains(Role.ROLE_TEACHER)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Only teachers can lead subjects!");
+        }
     }
 }

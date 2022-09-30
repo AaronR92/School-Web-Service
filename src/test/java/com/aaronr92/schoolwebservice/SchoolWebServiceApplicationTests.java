@@ -1,7 +1,9 @@
 package com.aaronr92.schoolwebservice;
 
 import com.aaronr92.schoolwebservice.dto.RoleOperation;
+import com.aaronr92.schoolwebservice.dto.SubjectDTO;
 import com.aaronr92.schoolwebservice.entity.Group;
+import com.aaronr92.schoolwebservice.entity.Subject;
 import com.aaronr92.schoolwebservice.repository.GroupRepository;
 import com.aaronr92.schoolwebservice.repository.MarkRepository;
 import com.aaronr92.schoolwebservice.repository.SubjectRepository;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -24,7 +27,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import javax.sql.DataSource;
+import javax.transaction.Transactional;
 import java.lang.reflect.Field;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Random;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -62,16 +69,21 @@ class SchoolWebServiceApplicationTests {
     @Autowired
     private GroupRepository groupRepository;
 
-    private final Random random = new Random();
+    @Autowired
+    DataSource dataSource;
 
-    //reset database
     @Test
     @Order(1)
-    void resetDb() {
+    void cleanDB() throws SQLException {
         userRepository.deleteAll();
         groupRepository.deleteAll();
         markRepository.deleteAll();
         subjectRepository.deleteAll();
+
+        dataSource.getConnection().prepareStatement("UPDATE group_seq SET next_val=1;").execute();
+        dataSource.getConnection().prepareStatement("UPDATE mark_seq SET next_val=1;").execute();
+        dataSource.getConnection().prepareStatement("UPDATE subject_seq SET next_val=1;").execute();
+        dataSource.getConnection().prepareStatement("UPDATE user_seq SET next_val=1;").execute();
 
         assertThat(userRepository.findAll().size())
                 .isEqualTo(0);
@@ -271,7 +283,7 @@ class SchoolWebServiceApplicationTests {
 
     @Test
     @Order(19)
-    void signupNewStudentToGroup22() throws Exception {
+    void registerNewUser_3() throws Exception {
         mvc.perform(post("/api/user/signup")
                         .content(toJson(TestUserDTO.builder()
                                 .name("Aiden ")
@@ -383,10 +395,108 @@ class SchoolWebServiceApplicationTests {
                 .andExpect(result -> assertEquals("Username [alechuang] is already occupied", result.getResponse().getErrorMessage()));
     }
 
-    /*
-    TODO
-        Subject tests
-     */
+    @Test
+    @Order(29)
+    void addNewNotValidSubject() throws Exception {
+        mvc.perform(post("/api/subject")
+                    .content(toJson(SubjectDTO.builder()
+                            .subject_name("Math")
+                            .build()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(30)
+    void addNewSubjectWithTeacher() throws Exception {
+        mvc.perform(post("/api/subject")
+                    .content(toJson(SubjectDTO.builder()
+                            .subject_name("Math")
+                            .teacher_username("alechuang")
+                            .build()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(user(email).password(password).roles("TEACHER")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Order(31)
+    void addNewSubjectWithAdmin() throws Exception {
+        mvc.perform(post("/api/subject")
+                    .content(toJson(SubjectDTO.builder()
+                            .subject_name("Math")
+                            .teacher_username("alechuang")
+                            .build()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @Order(32)
+    void addNewSubjectWrongTeacherUsernameWithAdmin() throws Exception {
+        mvc.perform(post("/api/subject")
+                        .content(toJson(SubjectDTO.builder()
+                                .subject_name("English")
+                                .teacher_username("america")
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(result -> assertEquals("This teacher is not registered!", result.getResponse().getErrorMessage()));
+    }
+
+    @Test
+    @Order(33)
+    void addNewSubjectStudentUsernameWithAdmin() throws Exception {
+        mvc.perform(post("/api/subject")
+                        .content(toJson(SubjectDTO.builder()
+                                .subject_name("English")
+                                .teacher_username("22_2")
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertEquals("Only teachers can lead subjects!", result.getResponse().getErrorMessage()));
+    }
+
+    @Test
+    @Order(34)
+    void registerNewUser_4() throws Exception {
+        mvc.perform(post("/api/user/signup")
+                        .content(toJson(TestUserDTO.builder()
+                                .name("Filip")
+                                .lastname("York")
+                                .email("fillipYo@gmail.com")
+                                .group(22)
+                                .number_by_order(3)
+                                .password("password")
+                                .phone("+79181451620")
+                                .gender(Gender.MALE)
+                                .dob("07.27.2006")
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @Order(35)
+    void registerNewUser_5() throws Exception {
+        mvc.perform(post("/api/user/signup")
+                        .content(toJson(TestUserDTO.builder()
+                                .name("Alice ")
+                                .lastname("Flores")
+                                .email("aliceFlor@gmail.com")
+                                .group(0)
+                                .number_by_order(2)
+                                .password("password")
+                                .phone("+79181451620")
+                                .gender(Gender.MALE)
+                                .dob("07.27.2006")
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+    }
 
     private <T> String toJson(T object) throws IllegalAccessException, JSONException {
         JSONObject json = new JSONObject();

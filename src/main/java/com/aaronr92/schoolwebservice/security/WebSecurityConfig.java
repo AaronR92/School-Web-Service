@@ -43,11 +43,11 @@ public class WebSecurityConfig {
                 .antMatchers(DELETE, "/api/user").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(POST, "api/student/mark").hasAuthority(ROLE_TEACHER.name())
                 .antMatchers(DELETE, "api/student/mark").hasAuthority(ROLE_TEACHER.name())
-                .antMatchers(POST, "/api/subject").hasAuthority(ROLE_ADMINISTRATOR.name())
-                .antMatchers(DELETE, "/api/subject").hasAuthority(ROLE_ADMINISTRATOR.name())
+                .antMatchers("/api/subject/**").hasAuthority(ROLE_ADMINISTRATOR.name())
                 .antMatchers(GET, "/api/group/**").hasAnyAuthority(ROLE_TEACHER.name(), ROLE_ADMINISTRATOR.name())
                 .antMatchers(POST, "/api/group").hasAuthority(ROLE_ADMINISTRATOR.name())
-                .antMatchers(DELETE, "/api/group").hasAuthority(ROLE_ADMINISTRATOR.name());
+                .antMatchers(DELETE, "/api/group").hasAuthority(ROLE_ADMINISTRATOR.name())
+                .anyRequest().denyAll();
 
         http.sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

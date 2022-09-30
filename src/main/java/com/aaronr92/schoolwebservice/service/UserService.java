@@ -3,6 +3,7 @@ package com.aaronr92.schoolwebservice.service;
 import com.aaronr92.schoolwebservice.dto.PasswordChange;
 import com.aaronr92.schoolwebservice.dto.RoleOperation;
 import com.aaronr92.schoolwebservice.dto.UserDTO;
+import com.aaronr92.schoolwebservice.entity.Group;
 import com.aaronr92.schoolwebservice.entity.User;
 import com.aaronr92.schoolwebservice.repository.GroupRepository;
 import com.aaronr92.schoolwebservice.repository.UserRepository;
@@ -43,7 +44,17 @@ public class UserService implements UserDetailsService {
     }
 
     public User signup(UserDTO userDTO) {
-        String username = String.format("%d_%d", userDTO.getGroup(), userDTO.getNumberByOrder());
+        checkValidPassword(userDTO.getPassword());
+
+        Group group = groupRepository.findGroupByGroupNumber(userDTO.getGroup());
+
+        if (group == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Group does not exist!");
+
+        String username = String.format("%d_%d", userDTO.getGroup(),
+                userDTO.getNumberByOrder() == null ?
+                        group.getUsers().size() + 1 : userDTO.getGroup());
+
         if (userRepository.existsUserByEmailIgnoreCase(userDTO.getEmail()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     String.format("User with email [%s] already exists!", userDTO.getEmail()));
@@ -54,8 +65,6 @@ public class UserService implements UserDetailsService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     String.format("User with phone number [%s] already exists!", userDTO.getPhone()));
 
-        checkValidPassword(userDTO.getPassword());
-        checkValidGroup(userDTO.getGroup());
 
         User user = User.builder()
                 .name(userDTO.getName().trim())
@@ -194,10 +203,5 @@ public class UserService implements UserDetailsService {
         }
 
         return null;
-    }
-
-    private void checkValidGroup(int groupNumber) {
-        if (groupRepository.findGroupByGroupNumber(groupNumber) == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Group does not exist!");
     }
 }

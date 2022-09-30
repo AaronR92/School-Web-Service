@@ -38,9 +38,8 @@ public class UserDTO {
     @NotNull
     private int group;
 
-    @NotNull
-    @JsonProperty("number_by_order")
-    private int numberByOrder;
+    @JsonProperty(value = "number_by_order")
+    private Integer numberByOrder;
 
     @NotBlank
     private String password;
