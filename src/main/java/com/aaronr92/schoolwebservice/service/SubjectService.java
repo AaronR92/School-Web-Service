@@ -39,40 +39,52 @@ public class SubjectService {
         subjectRepository.delete(subject);
     }
 
-    /**
-     * @param operation operation with subject
-     * @param subjectDTO subject to operate with
-     */
-    public Subject updateTeacher(String operation, SubjectDTO subjectDTO) {
-        Subject subject = subjectRepository.findSubjectByNameIgnoreCase(subjectDTO.getSubject_name());
+    public Subject updateTeacher(Long id, String operation, String teacher) {
+        Optional<Subject> subject = subjectRepository.findById(id);
 
-        if (subject == null)
+        if (subject.isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Subject not found!");
 
-        Optional<User> user = userRepository.findUserByUsername(subjectDTO.getTeacher_username());
+        Optional<User> user = userRepository.findUserByUsername(teacher);
 
         if (user.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "This teacher is not registered!");
         }
-        if (!user.get()
-                .getRoles().contains(Role.ROLE_TEACHER)) {
+        if (!user.get().getRoles().contains(Role.ROLE_TEACHER)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Only teachers can lead subjects!");
         }
 
         switch (operation) {
             case "ADD": {
-                subject.addTeacher(user.get());
-                return subjectRepository.save(subject);
+                subject.get().addTeacher(user.get());
+                return subjectRepository.save(subject.get());
             }
             case "REMOVE": {
-                subject.removeTeacher(user.get());
-                return subjectRepository.save(subject);
+                subject.get().removeTeacher(user.get());
+                return subjectRepository.save(subject.get());
             }
             default:
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not valid operation!");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Not valid operation!");
         }
 
+    }
+
+    public Subject updateSubject(Long id, String name) {
+        Optional<Subject> subject = subjectRepository.findById(id);
+
+        if (subject.isEmpty())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Subject not found!");
+
+        if (subjectRepository.existsByNameIgnoreCase(name)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "This subject already exists!");
+        }
+
+        subject.get().setName(name);
+        return subjectRepository.save(subject.get());
     }
 }

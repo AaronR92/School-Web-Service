@@ -23,14 +23,19 @@ public class SubjectController {
     public ResponseEntity<Map<String, String>> createNewSubject(@Valid @RequestBody SubjectDTO subject) {
         URI uri = URI.create(ServletUriComponentsBuilder
                 .fromCurrentContextPath()
-                .path("/api/subject/new")
+                .path("/api/subject")
                 .toUriString());
         return ResponseEntity.created(uri).body(subjectService.addNewSubject(subject));
     }
 
-    @PutMapping
-    public ResponseEntity<Subject> updateTeacher(@RequestParam String operation, @RequestBody SubjectDTO subjectDTO) {
-        return ResponseEntity.ok(subjectService.updateTeacher(operation, subjectDTO));
+    @PutMapping("/{id}")
+    public ResponseEntity<Subject> updateTeacher(@PathVariable Long id, @RequestParam String operation, @RequestParam String teacher) {
+        return ResponseEntity.ok(subjectService.updateTeacher(id, operation, teacher));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Subject> updateName(@PathVariable Long id, @RequestParam String name) {
+        return ResponseEntity.ok(subjectService.updateSubject(id, name));
     }
 
     @DeleteMapping

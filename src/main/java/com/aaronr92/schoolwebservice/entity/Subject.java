@@ -3,6 +3,7 @@ package com.aaronr92.schoolwebservice.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+import org.springframework.data.annotation.ReadOnlyProperty;
 
 import javax.persistence.*;
 import java.util.HashSet;
@@ -18,7 +19,7 @@ public class Subject {
     @Id
     @GeneratedValue(generator = "subjectSeq")
     @SequenceGenerator(name = "subjectSeq", sequenceName = "SUBJECT_SEQ", allocationSize = 1)
-    @JsonIgnore
+    @ReadOnlyProperty
     private Long id;
 
     @JsonProperty("subject_name")

@@ -23,8 +23,6 @@ public class StudentController {
         return ResponseEntity.ok().body(Map.of("status", "success"));
     }
 
-    //TODO
-    // test this
     @DeleteMapping("/mark")
     public ResponseEntity<?> deleteMark(@AuthenticationPrincipal User user,
                     @RequestBody MarkDTO markDTO) {
