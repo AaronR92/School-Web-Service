@@ -3,7 +3,6 @@ package com.aaronr92.schoolwebservice;
 import com.aaronr92.schoolwebservice.dto.RoleOperation;
 import com.aaronr92.schoolwebservice.dto.SubjectDTO;
 import com.aaronr92.schoolwebservice.entity.Group;
-import com.aaronr92.schoolwebservice.entity.Subject;
 import com.aaronr92.schoolwebservice.repository.GroupRepository;
 import com.aaronr92.schoolwebservice.repository.MarkRepository;
 import com.aaronr92.schoolwebservice.repository.SubjectRepository;
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -28,11 +26,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import javax.sql.DataSource;
-import javax.transaction.Transactional;
 import java.lang.reflect.Field;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Random;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -75,10 +70,10 @@ class SchoolWebServiceApplicationTests {
     @Test
     @Order(1)
     void cleanDB() throws SQLException {
+        subjectRepository.deleteAll();
+        markRepository.deleteAll();
         userRepository.deleteAll();
         groupRepository.deleteAll();
-        markRepository.deleteAll();
-        subjectRepository.deleteAll();
 
         dataSource.getConnection().prepareStatement("UPDATE group_seq SET next_val=1;").execute();
         dataSource.getConnection().prepareStatement("UPDATE mark_seq SET next_val=1;").execute();
@@ -170,7 +165,6 @@ class SchoolWebServiceApplicationTests {
                             .lastname("Sweet")
                             .email("MadelineSw@gmail.com")
                             .group(22)
-                            .number_by_order(1)
                             .password("password")
                             .phone("+79181451617")
                             .gender(Gender.FEMALE)
@@ -189,7 +183,6 @@ class SchoolWebServiceApplicationTests {
                             .lastname("Huang")
                             .email("alechuang@gmail.com")
                             .group(0)
-                            .number_by_order(1)
                             .password("password")
                             .phone("+79181451618")
                             .gender(Gender.MALE)
@@ -290,7 +283,6 @@ class SchoolWebServiceApplicationTests {
                                 .lastname("Lozano")
                                 .email("aidenLoz@gmail.com")
                                 .group(22)
-                                .number_by_order(2)
                                 .password("password")
                                 .phone("+79181451619")
                                 .gender(Gender.MALE)
@@ -365,7 +357,6 @@ class SchoolWebServiceApplicationTests {
                                 .lastname("Lu")
                                 .email("alenakaLulu@gmail.com")
                                 .group(23)
-                                .number_by_order(1)
                                 .password("password")
                                 .phone("+79181451620")
                                 .gender(Gender.FEMALE)
@@ -469,11 +460,10 @@ class SchoolWebServiceApplicationTests {
                                 .lastname("York")
                                 .email("fillipYo@gmail.com")
                                 .group(22)
-                                .number_by_order(3)
                                 .password("password")
                                 .phone("+79181451620")
                                 .gender(Gender.MALE)
-                                .dob("07.27.2006")
+                                .dob("27.07.2006")
                                 .build()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
@@ -488,14 +478,139 @@ class SchoolWebServiceApplicationTests {
                                 .lastname("Flores")
                                 .email("aliceFlor@gmail.com")
                                 .group(0)
-                                .number_by_order(2)
                                 .password("password")
-                                .phone("+79181451620")
-                                .gender(Gender.MALE)
-                                .dob("07.27.2006")
+                                .phone("+79181451621")
+                                .gender(Gender.FEMALE)
+                                .dob("14.06.1990")
                                 .build()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
+    }
+
+    @Test
+    @Order(36)
+    void changeUsernameToUser5() throws Exception {
+        mvc.perform(put("/api/user/change/username")
+                        .param("old_username", "0_2")
+                        .param("new_username", "aliceflores").with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(37)
+    void changeRoleToUser5() throws Exception {
+        mvc.perform(put("/api/user/change/role").with(user(email).password(password).roles("ADMINISTRATOR"))
+                        .content(toJson(new RoleOperation("aliceflores", "tEaCHeR", Action.GRANT)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(38)
+    void addNewEnglishSubject() throws Exception {
+        mvc.perform(post("/api/subject")
+                        .content(toJson(SubjectDTO.builder()
+                                .subject_name("English")
+                                .teacher_username("aliceflores")
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @Order(39)
+    void addNewBiologySubjectWithoutTeacher() throws Exception {
+        mvc.perform(post("/api/subject")
+                        .content(toJson(SubjectDTO.builder()
+                                .subject_name("Biology")
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Order(40)
+    void registerNewUser_6() throws Exception {
+        mvc.perform(post("/api/user/signup")
+                        .content(toJson(TestUserDTO.builder()
+                                .name("Penelope  ")
+                                .lastname("Lyon")
+                                .email("penelopeLyon@gmail.com")
+                                .group(0)
+                                .password("password")
+                                .phone("+79181451622")
+                                .gender(Gender.FEMALE)
+                                .dob("21.10.1984")
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @Order(41)
+    void changeUsernameToUser6() throws Exception {
+        mvc.perform(put("/api/user/change/username")
+                        .param("old_username", "0_3")
+                        .param("new_username", "penelopeLyon").with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(42)
+    void changeRoleToUser6() throws Exception {
+        mvc.perform(put("/api/user/change/role").with(user(email).password(password).roles("ADMINISTRATOR"))
+                        .content(toJson(new RoleOperation("penelopeLyon", "tEaCHeR", Action.GRANT)))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(43)
+    void addNewBiologySubject() throws Exception {
+        mvc.perform(post("/api/subject")
+                        .content(toJson(SubjectDTO.builder()
+                                .subject_name("Biology")
+                                .teacher_username("penelopelyon")
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @Order(44)
+    void addTeacher6ToBiology() throws Exception {
+        mvc.perform(put("/api/subject/3")
+                        .param("operation", "ADD")
+                        .param("teacher", "penelopelyon")
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertEquals("Teacher is already teaching this subject!",
+                        result.getResponse().getErrorMessage()));
+    }
+
+    @Test
+    @Order(45)
+    void removeTeacher6FromBiology() throws Exception {
+        mvc.perform(put("/api/subject/3")
+                        .param("operation", "REMOVE")
+                        .param("teacher", "penelopelyon")
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isNotFound())
+                .andExpect(result -> assertEquals("The Teacher has been removed",
+                        result.getResponse().getErrorMessage()));
+    }
+
+    @Test
+    @Order(46)
+    void addTeacher6ToEnglish() throws Exception {
+        mvc.perform(put("/api/subject/2")
+                        .param("operation", "ADD")
+                        .param("teacher", "penelopelyon")
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isOk());
     }
 
     private <T> String toJson(T object) throws IllegalAccessException, JSONException {

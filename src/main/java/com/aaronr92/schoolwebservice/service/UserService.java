@@ -51,9 +51,7 @@ public class UserService implements UserDetailsService {
         if (group == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Group does not exist!");
 
-        String username = String.format("%d_%d", userDTO.getGroup(),
-                userDTO.getNumberByOrder() == null ?
-                        group.getUsers().size() + 1 : userDTO.getGroup());
+        String username = String.format("%d_%d", userDTO.getGroup(), group.getUsers().size() + 1);
 
         if (userRepository.existsUserByEmailIgnoreCase(userDTO.getEmail()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

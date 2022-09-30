@@ -1,23 +1,16 @@
 package com.aaronr92.schoolwebservice.dto;
 
-import com.aaronr92.schoolwebservice.entity.Mark;
 import com.aaronr92.schoolwebservice.util.Gender;
-import com.aaronr92.schoolwebservice.util.Role;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
-import org.hibernate.annotations.SortNatural;
-import org.springframework.data.annotation.ReadOnlyProperty;
 
-import javax.persistence.*;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
 
 @Getter @Setter
 @NoArgsConstructor
@@ -37,9 +30,6 @@ public class UserDTO {
 
     @NotNull
     private int group;
-
-    @JsonProperty(value = "number_by_order")
-    private Integer numberByOrder;
 
     @NotBlank
     private String password;

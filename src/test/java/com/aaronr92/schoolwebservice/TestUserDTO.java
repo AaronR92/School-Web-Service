@@ -14,7 +14,6 @@ public class TestUserDTO {
     String lastname;
     String email;
     int group;
-    int number_by_order;
     String password;
     String phone;
     String dob;

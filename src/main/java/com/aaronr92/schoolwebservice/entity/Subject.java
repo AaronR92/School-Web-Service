@@ -1,6 +1,5 @@
 package com.aaronr92.schoolwebservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.springframework.data.annotation.ReadOnlyProperty;
@@ -26,7 +25,6 @@ public class Subject {
     private String name;
 
     @OneToMany
-    @JoinColumn(name = "teacher_id")
     @JsonProperty("teacher_username")
     private Set<User> teachers;
 

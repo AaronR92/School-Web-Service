@@ -29,9 +29,13 @@ public class SubjectService {
 
         checkTeacher(teacher);
 
-        subjectRepository.save(Subject.builder()
-                .name(subject.getSubject_name())
-                .build());
+        Subject s = Subject.builder()
+                        .name(subject.getSubject_name())
+                .build();
+
+        s.addTeacher(teacher.get());
+
+        subjectRepository.save(s);
 
         return Map.of("status", "success!");
     }
@@ -65,12 +69,21 @@ public class SubjectService {
 
         switch (operation.trim()) {
             case "ADD": {
+                if (subject.get().getTeachers().contains(teacher.get()))
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Teacher is already teaching this subject!");
+
                 subject.get().addTeacher(teacher.get());
                 return subjectRepository.save(subject.get());
             }
             case "REMOVE": {
+                if (!subject.get().getTeachers().contains(teacher.get()))
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Teacher is not teaching this subject!");
+
                 subject.get().removeTeacher(teacher.get());
-                return subjectRepository.save(subject.get());
+                subjectRepository.save(subject.get());
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "The Teacher has been removed");
             }
             default:
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
