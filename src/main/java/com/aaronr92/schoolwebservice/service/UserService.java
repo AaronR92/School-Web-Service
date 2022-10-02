@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +45,15 @@ public class UserService implements UserDetailsService {
     }
 
     public User signup(UserDTO userDTO) {
-        String username = String.format("%d_%d", userDTO.getGroup(), userDTO.getNumberByOrder());
+        checkValidPassword(userDTO.getPassword());
+
+        Group group = groupRepository.findGroupByGroupNumber(userDTO.getGroup());
+
+        if (group == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Group does not exist!");
+
+        String username = String.format("%d_%d", userDTO.getGroup(), group.getUsers().size() + 1);
+
         if (userRepository.existsUserByEmailIgnoreCase(userDTO.getEmail()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     String.format("User with email [%s] already exists!", userDTO.getEmail()));
@@ -55,8 +64,6 @@ public class UserService implements UserDetailsService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     String.format("User with phone number [%s] already exists!", userDTO.getPhone()));
 
-        checkValidPassword(userDTO.getPassword());
-        checkValidGroup(userDTO.getGroup());
 
         User user = User.builder()
                 .name(userDTO.getName().trim())
@@ -71,7 +78,12 @@ public class UserService implements UserDetailsService {
                 .isNonLocked(true)
                 .build();
 
-        user.grantAuthority(Role.ROLE_STUDENT);
+        if (userRepository.count() < 1) {
+            user.grantAuthority(Role.ROLE_ADMINISTRATOR);
+        } else {
+            user.grantAuthority(Role.ROLE_STUDENT);
+        }
+
 
         log.info("Saving new user {} with username {} to the database",
                 user.getName(),
@@ -82,7 +94,7 @@ public class UserService implements UserDetailsService {
 
     public Map<String, String> deleteUser(String username) {
         if (!userRepository.existsUserByUsername(username))
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found!");
 
         User user = userRepository.findUserByUsername(username).get();
 
@@ -136,7 +148,7 @@ public class UserService implements UserDetailsService {
         newUsername = newUsername.trim();
         Optional<User> userOptional = userRepository.findUserByUsername(oldUsername.trim());
         if (userOptional.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found!");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found!");
         if (userRepository.existsUserByUsername(newUsername))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Username [%s] is already occupied", newUsername));
         User user = userOptional.get();
@@ -144,7 +156,8 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
-    public PasswordChange changePassword(User user, PasswordChange passwordChange) {
+    public PasswordChange changePassword(Principal principal, PasswordChange passwordChange) {
+        User user = userRepository.findUserByUsername(principal.getName()).get();
         if (!passwordEncoder.matches(passwordChange.getCurrentPassword(), user.getPassword())) {
             log.error("Current passwords does not match for user {}", user.getUsername());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -162,17 +175,6 @@ public class UserService implements UserDetailsService {
         passwordChange.setStatus("Password has changed successfully!");
         return passwordChange;
     }
-
-    //    public Map<String, String> changeUsername(User user, String username) {
-//        if (user.isUsernameChanged()) {
-//            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-//                    "Username was already changed");
-//        }
-//
-//        user.setUsername(username);
-//        user.setUsernameChanged(true);
-//        return Map.of("status", "Username was changed successfully");
-//    }
 
     private void checkValidPassword(String password) {
         if (password.length() < 8)
@@ -201,10 +203,5 @@ public class UserService implements UserDetailsService {
         }
 
         return null;
-    }
-
-    private void checkValidGroup(int groupNumber) {
-        if (groupRepository.findGroupByGroupNumber(groupNumber) == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Group does not exist!");
     }
 }

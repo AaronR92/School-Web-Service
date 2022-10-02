@@ -1,14 +1,12 @@
 package com.aaronr92.schoolwebservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+import org.springframework.data.annotation.ReadOnlyProperty;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.validation.constraints.NotBlank;
+import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity(name = "subjects")
 @Getter @Setter
@@ -20,14 +18,24 @@ public class Subject {
     @Id
     @GeneratedValue(generator = "subjectSeq")
     @SequenceGenerator(name = "subjectSeq", sequenceName = "SUBJECT_SEQ", allocationSize = 1)
-    @JsonIgnore
+    @ReadOnlyProperty
     private Long id;
 
     @JsonProperty("subject_name")
-    @NotBlank
     private String name;
 
+    @OneToMany
     @JsonProperty("teacher_username")
-    @NotBlank
-    private String teacher;
+    private Set<User> teachers;
+
+    public void addTeacher(User teacher) {
+        if (teachers == null) {
+            teachers = new HashSet<>();
+        }
+        teachers.add(teacher);
+    }
+
+    public void removeTeacher(User teacher) {
+        teachers.remove(teacher);
+    }
 }

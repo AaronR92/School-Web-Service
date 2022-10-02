@@ -9,6 +9,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 
 @Configuration
 @EnableJpaRepositories
@@ -18,7 +20,7 @@ public class MySQLJpaConfig {
 
     @Bean
     @Profile("test")
-    public DataSource dataSource() {
+    public DataSource dataSource() throws SQLException {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
         dataSource.setUrl("jdbc:mysql://localhost:3306/test_college_service_db");
