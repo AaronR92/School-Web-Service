@@ -1,5 +1,7 @@
 package com.aaronr92.schoolwebservice;
 
+import com.aaronr92.schoolwebservice.dto.MarkDTO;
+import com.aaronr92.schoolwebservice.dto.PasswordChange;
 import com.aaronr92.schoolwebservice.dto.RoleOperation;
 import com.aaronr92.schoolwebservice.dto.SubjectDTO;
 import com.aaronr92.schoolwebservice.entity.Group;
@@ -70,8 +72,8 @@ class SchoolWebServiceApplicationTests {
     @Test
     @Order(1)
     void cleanDB() throws SQLException {
-        subjectRepository.deleteAll();
         markRepository.deleteAll();
+        subjectRepository.deleteAll();
         userRepository.deleteAll();
         groupRepository.deleteAll();
 
@@ -611,6 +613,86 @@ class SchoolWebServiceApplicationTests {
                         .param("teacher", "penelopelyon")
                         .with(user(email).password(password).roles("ADMINISTRATOR")))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(47)
+    void changePassword() throws Exception {
+        mvc.perform(put("/api/user/change/password")
+                    .content(toJson(PasswordChange.builder()
+                            .currentPassword("password")
+                            .newPassword("p4ssword")
+                            .build()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(user("alechuang").password("password").roles("TEACHER")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(48)
+    void changePasswordBack() throws Exception {
+        mvc.perform(put("/api/user/change/password")
+                    .content(toJson(PasswordChange.builder()
+                            .currentPassword("p4ssword")
+                            .newPassword("password")
+                            .build()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(user("alechuang").password("p4ssword").roles("TEACHER")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @Order(49)
+    void postMarkWithAdmin() throws Exception {
+        mvc.perform(post("/api/student/mark")
+                        .content(toJson(MarkDTO.builder()
+                                .subjectName("Math")
+                                .student("22_2")
+                                .mark(5)
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("alechuang").password("password").roles("ADMINISTRATOR")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Order(50)
+    void postMarkWithTeacher() throws Exception {
+        mvc.perform(post("/api/student/mark")
+                    .content(toJson(MarkDTO.builder()
+                            .subjectName("Math")
+                            .student("22_2")
+                            .mark(5)
+                            .build()))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(user("alechuang").password("password").roles("TEACHER")))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertEquals("{\"status\":\"success\"}", result.getResponse().getContentAsString()));
+    }
+
+    @Test
+    @Order(51)
+    void findUser22_2() throws Exception {
+        mvc.perform(get("/api/user/find")
+                        .param("username", "22_2")
+                        .with(user(email).password(password).roles("ADMINISTRATOR")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email", is("aidenloz@gmail.com")))
+                .andExpect(jsonPath("$.roles[0]", is("ROLE_STUDENT")));
+    }
+
+    @Test
+    @Order(52)
+    void deleteMarkWithTeacher() throws Exception {
+        mvc.perform(delete("/api/student/mark")
+                        .content(toJson(MarkDTO.builder()
+                                .subjectName("Math")
+                                .student("22_2")
+                                .mark(5)
+                                .build()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("alechuang").password("password").roles("TEACHER")))
+                .andExpect(status().isNoContent());
     }
 
     private <T> String toJson(T object) throws IllegalAccessException, JSONException {

@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -155,7 +156,8 @@ public class UserService implements UserDetailsService {
         userRepository.save(user);
     }
 
-    public PasswordChange changePassword(User user, PasswordChange passwordChange) {
+    public PasswordChange changePassword(Principal principal, PasswordChange passwordChange) {
+        User user = userRepository.findUserByUsername(principal.getName()).get();
         if (!passwordEncoder.matches(passwordChange.getCurrentPassword(), user.getPassword())) {
             log.error("Current passwords does not match for user {}", user.getUsername());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,

@@ -1,11 +1,13 @@
 package com.aaronr92.schoolwebservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.ReadOnlyProperty;
 
 @Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class PasswordChange {
 
     @JsonProperty(value = "current_password",

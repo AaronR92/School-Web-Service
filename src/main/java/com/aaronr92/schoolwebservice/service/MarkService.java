@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -26,9 +27,10 @@ public class MarkService {
     private final UserRepository userRepository;
     private final SubjectRepository subjectRepository;
 
-    public void addMark(User user, MarkDTO markDTO) {
-        validateTeacher(user);
+    public void addMark(Principal principal, MarkDTO markDTO) {
+        User teacher = userRepository.findUserByUsername(principal.getName()).get();
         validateMark(markDTO);
+        validateTeacher(teacher, markDTO.getSubjectName());
 
         User student = userRepository.findUserByUsername(markDTO.getStudent()).get();
         Optional<Mark> mark = markRepository.findDistinctFirstByUser(student);
@@ -38,8 +40,8 @@ public class MarkService {
                         "This student has already received a mark today!");
         }
 
-        Subject subject = subjectRepository.findSubjectByNameIgnoreCase(markDTO.getSubjectName());
-        if (!subject.getTeachers().contains(user)) {
+        Subject subject = subjectRepository.findSubjectByNameIgnoreCase(markDTO.getSubjectName()).get();
+        if (!subject.getTeachers().contains(teacher)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "You don't teach this subject!");
         }
@@ -48,13 +50,14 @@ public class MarkService {
                 .user(userRepository.findUserByUsername(markDTO.getStudent()).get())
                 .subject(subject)
                 .mark(markDTO.getMark())
-                .teacher(String.format("%s %s", user.getName(), user.getLastname()))
+                .teacher(String.format("%s %s", teacher.getName(), teacher.getLastname()))
                 .build();
         markRepository.save(m);
     }
 
-    public void deleteMark(User user, MarkDTO markDTO) {
-        validateTeacher(user);
+    public void deleteMark(Principal principal, MarkDTO markDTO) {
+        User teacher = userRepository.findUserByUsername(principal.getName()).get();
+        validateTeacher(teacher, markDTO.getSubjectName());
         validateMark(markDTO);
 
         User student = userRepository.findUserByUsername(markDTO.getStudent()).get();
@@ -73,14 +76,17 @@ public class MarkService {
     }
 
     private void validateMark(MarkDTO markDTO) {
-        if (!userRepository.existsUserByUsername(markDTO.getStudent()))
+        Optional<User> user = userRepository.findUserByUsername(markDTO.getStudent());
+        if (user.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "This student does not exist!");
-        if (!subjectRepository.existsByNameIgnoreCase(markDTO.getSubjectName()))
+        }
+        if (!subjectRepository.existsByNameIgnoreCase(markDTO.getSubjectName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "This subject does not exist!");
+        }
 
-        User receiver = userRepository.findUserByUsername(markDTO.getStudent()).get();
+        User receiver = user.get();
         if (receiver.getRoles().contains(Role.ROLE_ADMINISTRATOR) ||
                 receiver.getRoles().contains(Role.ROLE_TEACHER) ||
                 !receiver.getRoles().contains(Role.ROLE_STUDENT)) {
@@ -89,9 +95,14 @@ public class MarkService {
         }
     }
 
-    private void validateTeacher(User user) {
+    private void validateTeacher(User user, String subject) {
         if (!user.getRoles().contains(Role.ROLE_TEACHER))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Only teacher can perform operations with marks!");
+        Subject s = subjectRepository.findSubjectByNameIgnoreCase(subject).get();
+        if (!s.getTeachers().contains(user)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    String.format("You are not leading [%s] subject!", s.getName()));
+        }
     }
 }

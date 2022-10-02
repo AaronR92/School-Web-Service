@@ -41,11 +41,11 @@ public class SubjectService {
     }
 
     public void deleteSubject(String subjectName) {
-        Subject subject = subjectRepository.findSubjectByNameIgnoreCase(subjectName);
-        if (subject == null)
+        Optional<Subject> subject = subjectRepository.findSubjectByNameIgnoreCase(subjectName);
+        if (subject.isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "This subject is not present!");
-        subjectRepository.delete(subject);
+        subjectRepository.delete(subject.get());
     }
 
     public Subject update(Long id, String operation, String teacher, String name) {
